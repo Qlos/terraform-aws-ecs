@@ -107,19 +107,7 @@ resource "aws_launch_template" "launch_template" {
     security_groups             = ["${local.ecs_security_group_id}"]
   }
 
-  tags = merge(
-    {
-      "org"      = var.org
-      "app"      = var.app_name
-      "env"      = var.env
-      "owner"    = var.owner
-    },
-    var.extra_tags,
-  )
-
-#  instance_market_options {
-#    market_type = "spot"
-#  }
+  tags = var.tags
 }
 
 # Instances are scaled across availability zones http://docs.aws.amazon.com/autoscaling/latest/userguide/auto-scaling-benefits.html 
@@ -160,30 +148,8 @@ resource "aws_autoscaling_group" "asg_spot" {
      }
   }
 
-  tag {
-        key                 = "org"
-        value               = var.org
-        propagate_at_launch = true
-      }
-
-  tag {
-        key                 = "app"
-        value               = var.app_name
-        propagate_at_launch = true
-  }
-  tag {
-        key                 = "env"
-        value               = var.env
-        propagate_at_launch = true
-  }
-  tag {
-        key                 = "owner"
-        value               = var.owner
-        propagate_at_launch = true
-  }
-
   dynamic "tag" {
-    for_each = var.extra_tags
+    for_each = var.tags
     content {
       key                 = tag.value.key
       propagate_at_launch = tag.value.propagate_at_launch
@@ -211,30 +177,8 @@ resource "aws_autoscaling_group" "asg" {
     version = "$Latest"
   }
 
-  tag {
-        key                 = "org"
-        value               = var.org
-        propagate_at_launch = true
-      }
-
-  tag {
-        key                 = "app"
-        value               = var.app_name
-        propagate_at_launch = true
-  }
-  tag {
-        key                 = "env"
-        value               = var.env
-        propagate_at_launch = true
-  }
-  tag {
-        key                 = "owner"
-        value               = var.owner
-        propagate_at_launch = true
-  }
-
   dynamic "tag" {
-    for_each = var.extra_tags
+    for_each = var.tags
     content {
       key                 = tag.value.key
       propagate_at_launch = tag.value.propagate_at_launch
@@ -290,13 +234,5 @@ resource "aws_autoscaling_attachment" "asg_attachment" {
 
 resource "aws_ecs_cluster" "cluster" {
   name = var.name
-  tags = merge(
-    {
-      "org"      = var.org
-      "app"      = var.app_name
-      "env"      = var.env
-      "owner"    = var.owner
-    },
-    var.extra_tags,
-  )
+  tags = var.tags
 }

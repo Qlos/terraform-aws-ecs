@@ -30,15 +30,7 @@ resource "aws_cloudwatch_event_rule" "ecs_task_stopped" {
   name          = "${var.name}_task_stopped"
   description   = "${var.name} Essential container in task exited"
   event_pattern = data.template_file.ecs_task_stopped.rendered
-  tags = merge(
-    {
-      "org"      = var.org
-      "app"      = var.app_name
-      "env"      = var.env
-      "owner"    = var.owner
-    },
-    var.extra_tags,
-  )
+  tags          = var.tags
 }
 
 resource "aws_cloudwatch_event_target" "event_fired" {

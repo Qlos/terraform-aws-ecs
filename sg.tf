@@ -8,17 +8,7 @@ resource "aws_security_group" "instance" {
   description               = "Used in ${var.name} cluster"
   vpc_id                    = var.vpc_id
 
-  tags = merge(
-    {
-      "Name"           = "${var.name}_${var.instance_group}"
-      "InstanceGroup"  = "${var.instance_group}"
-      "org"            = var.org
-      "app"            = var.app_name
-      "env"            = var.env
-      "owner"          = var.owner
-    },
-    var.extra_tags,
-  )
+  tags                      = var.tags
 }
 
 resource "aws_security_group_rule" "outbound_internet_access" {

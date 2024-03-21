@@ -17,16 +17,7 @@ resource "aws_iam_role" "ecs_execution_task" {
 }
 EOF
 
-  tags = merge(
-    {
-      "Name"     = "ecsTaskExecutionRole"
-      "org"      = var.org
-      "app"      = var.app_name
-      "env"      = var.env
-      "owner"    = var.owner
-    },
-    var.extra_tags,
-  )
+  tags = var.tags
 }
 
 resource "aws_iam_policy" "ecs_execution_task" {
@@ -62,16 +53,7 @@ resource "aws_iam_policy" "ecs_execution_task" {
     ]
   })
 
-  tags = merge(
-    {
-      "Name"     = "${var.name}_task_execution_role_task"
-      "org"      = var.org
-      "app"      = var.app_name
-      "env"      = var.env
-      "owner"    = var.owner
-    },
-    var.extra_tags,
-  )
+  tags = var.tags
 }
 
 resource "aws_iam_policy_attachment" "ecs_execution_task" {
@@ -99,16 +81,7 @@ resource "aws_iam_role" "ecs_default_task" {
 }
 EOF
 
-  tags = merge(
-    {
-      "Name"     = "${var.name}_ecs_instance_profile"
-      "org"      = var.org
-      "app"      = var.app_name
-      "env"      = var.env
-      "owner"    = var.owner
-    },
-    var.extra_tags,
-  )
+  tags = var.tags
 }
 
 data "aws_caller_identity" "current_role_identity" {}
@@ -126,21 +99,12 @@ data "template_file" "policy" {
 }
 
 resource "aws_iam_policy" "ecs_default_task" {
-  name = "${var.name}_ecs_default_task"
-  path = "/"
+  name   = "${var.name}_ecs_default_task"
+  path   = "/"
 
   policy = data.template_file.policy.rendered
 
-  tags = merge(
-    {
-      "Name"     = "${var.name}_ecs_instance_profile"
-      "org"      = var.org
-      "app"      = var.app_name
-      "env"      = var.env
-      "owner"    = var.owner
-    },
-    var.extra_tags,
-  )
+  tags   = var.tags
 }
 
 resource "aws_iam_policy_attachment" "ecs_default_task" {

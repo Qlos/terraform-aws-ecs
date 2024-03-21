@@ -5,16 +5,7 @@
 resource "aws_iam_role" "ecs_instance_role" {
   name = "${var.name}_ecs_instance_role"
 
-  tags = merge(
-    {
-      "Name"     = "${var.name}_ecs_instance_role"
-      "org"      = var.org
-      "app"      = var.app_name
-      "env"      = var.env
-      "owner"    = var.owner
-    },
-    var.extra_tags,
-  )
+  tags = var.tags
 
   assume_role_policy = <<EOF
 {
@@ -36,16 +27,7 @@ resource "aws_iam_instance_profile" "ecs" {
   name = "${var.name}_ecs_instance_profile"
   path = "/"
   role = aws_iam_role.ecs_instance_role.name
-  tags = merge(
-    {
-      "Name"     = "${var.name}_ecs_instance_profile"
-      "org"      = var.org
-      "app"      = var.app_name
-      "env"      = var.env
-      "owner"    = var.owner
-    },
-    var.extra_tags,
-  )
+  tags = var.tags
 }
 
 resource "aws_iam_role_policy_attachment" "ecs_ec2_role" {

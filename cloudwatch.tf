@@ -6,89 +6,35 @@
 resource "aws_cloudwatch_log_group" "dmesg" {
   name              = "${var.cloudwatch_prefix}/var/log/dmesg"
   retention_in_days = 30
-  tags = merge(
-    {
-      "Name"     = "${var.cloudwatch_prefix}/var/log/dmesg"
-      "org"      = var.org
-      "app"      = var.app_name
-      "env"      = var.env
-      "owner"    = var.owner
-    },
-    var.extra_tags,
-  )
+  tags              = var.tags
 }
 
 resource "aws_cloudwatch_log_group" "docker" {
   name              = "${var.cloudwatch_prefix}/var/log/docker"
   retention_in_days = 30
-  tags = merge(
-    {
-      "Name"     = "${var.cloudwatch_prefix}/var/log/docker"
-      "org"      = var.org
-      "app"      = var.app_name
-      "env"      = var.env
-      "owner"    = var.owner
-    },
-    var.extra_tags,
-  )
+  tags              = var.tags
 }
 
 resource "aws_cloudwatch_log_group" "ecs-agent" {
   name              = "${var.cloudwatch_prefix}/var/log/ecs/ecs-agent.log"
   retention_in_days = 30
-  tags = merge(
-    {
-      "Name"     = "${var.cloudwatch_prefix}/var/log/ecs/ecs-agent.log"
-      "org"      = var.org
-      "app"      = var.app_name
-      "env"      = var.env
-      "owner"    = var.owner
-    },
-    var.extra_tags,
-  )
+  tags              = var.tags
 }
 
 resource "aws_cloudwatch_log_group" "ecs-init" {
   name              = "${var.cloudwatch_prefix}/var/log/ecs/ecs-init.log"
   retention_in_days = 30
-  tags = merge(
-    {
-      "Name"     = "${var.cloudwatch_prefix}/var/log/ecs/ecs-init.log"
-      "org"      = var.org
-      "app"      = var.app_name
-      "env"      = var.env
-      "owner"    = var.owner
-    },
-    var.extra_tags,
-  )
+  tags              = var.tags
 }
 
 resource "aws_cloudwatch_log_group" "audit" {
   name              = "${var.cloudwatch_prefix}/var/log/ecs/audit.log"
   retention_in_days = 30
-  tags = merge(
-    {
-      "Name"     = "${var.cloudwatch_prefix}/var/log/ecs/audit.log"
-      "org"      = var.org
-      "app"      = var.app_name
-      "env"      = var.env
-      "owner"    = var.owner
-    },
-    var.extra_tags,
-  )
+  tags              = var.tags
 }
 
 resource "aws_cloudwatch_log_group" "messages" {
   name              = "${var.cloudwatch_prefix}/var/log/messages"
   retention_in_days = 30
-  tags = merge(
-    {
-      "Name"     = "${var.cloudwatch_prefix}/var/log/messages"
-      "org"      = var.org
-      "app"      = var.app_name
-      "env"      = var.env
-      "owner"    = var.owner
-    },
-    var.extra_tags,
-  )
+  tags              = var.tags
 }

@@ -2,16 +2,7 @@ resource "aws_iam_role" "ecs_lb_role" {
   name = "${var.name}_ecs_lb_role"
   path = "/ecs/"
 
-  tags = merge(
-    {
-      "Name"     = "${var.name}_ecs_instance_profile"
-      "org"      = var.org
-      "app"      = var.app_name
-      "env"      = var.env
-      "owner"    = var.owner
-    },
-    var.extra_tags,
-  )
+  tags = var.tags
 
   assume_role_policy = <<EOF
 {
