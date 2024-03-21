@@ -149,11 +149,16 @@ resource "aws_autoscaling_group" "asg_spot" {
   }
 
   dynamic "tag" {
-    for_each = var.tags
+    for_each = merge(
+      {
+        "Name"        = "${var.name}_${var.instance_group}"
+      },
+      var.tags
+    )
     content {
-      key                 = tag.value.key
-      propagate_at_launch = tag.value.propagate_at_launch
-      value               = tag.value.value
+      key                 = tag.key
+      value               = tag.value
+      propagate_at_launch = true
     }
   }
 
@@ -178,11 +183,16 @@ resource "aws_autoscaling_group" "asg" {
   }
 
   dynamic "tag" {
-    for_each = var.tags
+    for_each = merge(
+      {
+        "Name"        = "${var.name}_${var.instance_group}"
+      },
+      var.tags
+    )
     content {
-      key                 = tag.value.key
-      propagate_at_launch = tag.value.propagate_at_launch
-      value               = tag.value.value
+      key                 = tag.key
+      value               = tag.value
+      propagate_at_launch = true
     }
   }
 
