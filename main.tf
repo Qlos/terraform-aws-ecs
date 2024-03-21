@@ -40,6 +40,11 @@ data "aws_ami" "latest_ecs_ami" {
     values = ["hvm"]
   }
 
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
+  }
+
   owners = ["amazon"]
 }
 
