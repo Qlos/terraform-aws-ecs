@@ -202,7 +202,6 @@ data "template_file" "user_data" {
     ecs_log_level                         = var.ecs_log_level
     ecs_log_file                           = var.ecs_log_file
     cluster_name                          = var.name
-    env_name                              = var.org
     custom_userdata                       = var.custom_userdata
     cloudwatch_prefix                      = var.cloudwatch_prefix
     ecs_disable_image_cleanup             = var.ecs_disable_image_cleanup
