@@ -32,7 +32,7 @@ variable "familiar_instance_types" {
   description = "Used only with `spot_instance` variable. List of familiar instance types to use with lowest weight from `instance_type`"
 }
 
-variable "spot_instances" {  
+variable "spot_instances" {
   type        = bool
   default     = false
   description = "Enable or disable spot instances"
@@ -159,7 +159,7 @@ variable "ecs_log_level" {
   validation {
     condition     = contains(["crit", "error", "warn", "info", "debug"], var.ecs_log_level)
     error_message = "Available values \"crit\", \"error\", \"warn\", \"info\" or \"debug\"."
-  } 
+  }
 }
 
 variable "ecs_reserved_ports" {
@@ -209,7 +209,7 @@ variable "ecs_checkpoint" {
 
 variable "ecs_container_stop_timeout" {
    default     = "10m"
-   description = "Instance scoped configuration for time to wait for the container to exit normally before being forcibly killed." 
+   description = "Instance scoped configuration for time to wait for the container to exit normally before being forcibly killed."
 }
 
 variable "ecs_enable_spot_instance_draining" {
@@ -233,3 +233,8 @@ variable "tags" {
   description = "Map of tags to assign to bucket."
 }
 
+variable "capacity_providers" {
+  type = map(any)
+  default = {}
+  description = "Configuration of Capacity Providers for ECS cluster autoscaling"
+}
