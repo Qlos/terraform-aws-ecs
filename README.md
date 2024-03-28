@@ -50,25 +50,24 @@ See [LICENSE](LICENSE) for full details.
 
 ### Modules
 
-No modules.
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_node_group"></a> [node\_group](#module\_node\_group) | ./modules/node-group | n/a |
 
 ### Resources
 
 | Name | Type |
 |------|------|
-| [aws_autoscaling_attachment.asg_attachment](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/autoscaling_attachment) | resource |
-| [aws_autoscaling_attachment.asg_spot_attachment](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/autoscaling_attachment) | resource |
-| [aws_autoscaling_group.asg](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/autoscaling_group) | resource |
-| [aws_autoscaling_group.asg_spot](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/autoscaling_group) | resource |
 | [aws_cloudwatch_event_rule.ecs_task_stopped](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_rule) | resource |
 | [aws_cloudwatch_event_target.event_fired](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_event_target) | resource |
 | [aws_cloudwatch_log_group.audit](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
+| [aws_cloudwatch_log_group.cluster](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_cloudwatch_log_group.dmesg](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_cloudwatch_log_group.docker](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_cloudwatch_log_group.ecs-agent](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_cloudwatch_log_group.ecs-init](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_cloudwatch_log_group.messages](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
-| [aws_ecs_cluster.cluster](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_cluster) | resource |
+| [aws_ecs_cluster.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_cluster) | resource |
 | [aws_iam_instance_profile.ecs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_instance_profile) | resource |
 | [aws_iam_policy.ecs_default_task](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
 | [aws_iam_policy.ecs_execution_task](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
@@ -80,8 +79,8 @@ No modules.
 | [aws_iam_role.ecs_lb_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role_policy_attachment.ecs_ec2_cloudwatch_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [aws_iam_role_policy_attachment.ecs_ec2_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
+| [aws_iam_role_policy_attachment.ecs_ec2_ssm_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [aws_iam_role_policy_attachment.ecs_lb](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
-| [aws_launch_template.launch_template](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/launch_template) | resource |
 | [aws_security_group.instance](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) | resource |
 | [aws_security_group_rule.alb_to_ecs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
 | [aws_security_group_rule.allowed_sgs_to_ecs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
@@ -102,11 +101,16 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_alb_security_group_id"></a> [alb\_security\_group\_id](#input\_alb\_security\_group\_id) | ALB security group id. Can be used only with `create_security_group` variable with `false` value. | `string` | `""` | no |
-| <a name="input_allowed_security_group_ids"></a> [allowed\_security\_group\_ids](#input\_allowed\_security\_group\_ids) | Allowed this AWS security groups to ECS cluster. Can be used only with `create_security_group` variable with `false` value. | `list` | `[]` | no |
+| <a name="input_allowed_security_group_ids"></a> [allowed\_security\_group\_ids](#input\_allowed\_security\_group\_ids) | Allowed this AWS security groups to ECS cluster. Can be used only with `create_security_group` variable with `false` value. | `list(any)` | `[]` | no |
+| <a name="input_ami_id"></a> [ami\_id](#input\_ami\_id) | The AWS ami id to use | `string` | `""` | no |
 | <a name="input_associated_security_group_id"></a> [associated\_security\_group\_id](#input\_associated\_security\_group\_id) | Variable to use only with `associated_security_group_id` variable. This security group will be assigned to the ecs cluster instead of creating a new page | `string` | `""` | no |
-| <a name="input_aws_ami"></a> [aws\_ami](#input\_aws\_ami) | The AWS ami id to use | `string` | `""` | no |
 | <a name="input_block_device_mappings"></a> [block\_device\_mappings](#input\_block\_device\_mappings) | Specify volumes to attach to the instance besides the volumes specified by the AMI | `any` | `{}` | no |
-| <a name="input_cloudwatch_prefix"></a> [cloudwatch\_prefix](#input\_cloudwatch\_prefix) | If you want to avoid cloudwatch collision or you don't want to merge all logs to one log group specify a prefix | `string` | `""` | no |
+| <a name="input_cloudwatch_log_group_retention_in_days"></a> [cloudwatch\_log\_group\_retention\_in\_days](#input\_cloudwatch\_log\_group\_retention\_in\_days) | Number of days to retain log events | `number` | `90` | no |
+| <a name="input_cloudwatch_log_group_tags"></a> [cloudwatch\_log\_group\_tags](#input\_cloudwatch\_log\_group\_tags) | A map of additional tags to add to the log group created | `map(string)` | `{}` | no |
+| <a name="input_cluster_configuration"></a> [cluster\_configuration](#input\_cluster\_configuration) | The execute command configuration for the cluster | `any` | `{}` | no |
+| <a name="input_cluster_service_connect_defaults"></a> [cluster\_service\_connect\_defaults](#input\_cluster\_service\_connect\_defaults) | Configures a default Service Connect namespace | `map(string)` | `{}` | no |
+| <a name="input_cluster_settings"></a> [cluster\_settings](#input\_cluster\_settings) | List of configuration block(s) with cluster settings. For example, this can be used to enable CloudWatch Container Insights for a cluster | `any` | <pre>[<br>  {<br>    "name": "containerInsights",<br>    "value": "enabled"<br>  }<br>]</pre> | no |
+| <a name="input_create_cloudwatch_log_group"></a> [create\_cloudwatch\_log\_group](#input\_create\_cloudwatch\_log\_group) | Determines whether a log group is created by this module for the cluster logs. If not, AWS will automatically create one if logging is enabled | `bool` | `true` | no |
 | <a name="input_create_security_group"></a> [create\_security\_group](#input\_create\_security\_group) | Create internal AWS SG for ECS cluster. If value is set to `false` you need set up the `associated_security_group_id` variable. | `bool` | `true` | no |
 | <a name="input_custom_userdata"></a> [custom\_userdata](#input\_custom\_userdata) | Inject extra bash command in the instance template to be run on boot | `string` | `""` | no |
 | <a name="input_custom_userdata_directives"></a> [custom\_userdata\_directives](#input\_custom\_userdata\_directives) | Inject extra cloud-init directives in the instance template to be run on boot. Please visit a doc https://cloudinit.readthedocs.io/en/latest/ | `string` | `""` | no |
@@ -129,20 +133,22 @@ No modules.
 | <a name="input_ecs_reserved_ports"></a> [ecs\_reserved\_ports](#input\_ecs\_reserved\_ports) | An array of TCP ports that should be marked as unavailable for scheduling on this container instance. | `string` | `"[22, 2375, 2376, 51678, 51679, 51680]"` | no |
 | <a name="input_ecs_reserved_udp_ports"></a> [ecs\_reserved\_udp\_ports](#input\_ecs\_reserved\_udp\_ports) | An array of UDP ports that should be marked as unavailable for scheduling on this container instance. | `string` | `"[]"` | no |
 | <a name="input_enable_monitoring"></a> [enable\_monitoring](#input\_enable\_monitoring) | Enables/disables detailed monitoring | `bool` | `true` | no |
-| <a name="input_familiar_instance_types"></a> [familiar\_instance\_types](#input\_familiar\_instance\_types) | Used only with `spot_instance` variable. List of familiar instance types to use with lowest weight from `instance_type` | `list` | <pre>[<br>  "t3.large",<br>  "m5.large",<br>  "c5.xlarge"<br>]</pre> | no |
+| <a name="input_familiar_instance_types"></a> [familiar\_instance\_types](#input\_familiar\_instance\_types) | Used only with `spot_instance` variable. List of familiar instance types to use with lowest weight from `instance_type` | `list(any)` | <pre>[<br>  "t3.large",<br>  "m5.large",<br>  "c5.xlarge"<br>]</pre> | no |
 | <a name="input_instance_group"></a> [instance\_group](#input\_instance\_group) | The name of the instances that you consider as a group | `string` | `"default"` | no |
 | <a name="input_instance_type"></a> [instance\_type](#input\_instance\_type) | AWS main type of EC2 instance to use | `string` | `"t2.micro"` | no |
 | <a name="input_key_name"></a> [key\_name](#input\_key\_name) | SSH key name to be used | `any` | n/a | yes |
-| <a name="input_lb_target_group"></a> [lb\_target\_group](#input\_lb\_target\_group) | LoadBalancer target group ARN | `string` | `""` | no |
-| <a name="input_load_balancers"></a> [load\_balancers](#input\_load\_balancers) | The load balancers to couple to the instances. Only used when NOT using ALB | `list` | `[]` | no |
+| <a name="input_load_balancers"></a> [load\_balancers](#input\_load\_balancers) | The load balancers to couple to the instances. Only used when NOT using ALB | `list(any)` | `[]` | no |
 | <a name="input_max_size"></a> [max\_size](#input\_max\_size) | Maximum size of the nodes in the cluster | `number` | `1` | no |
 | <a name="input_metadata_options"></a> [metadata\_options](#input\_metadata\_options) | Customize the metadata options for the instance | `map(string)` | <pre>{<br>  "http_endpoint": "enabled",<br>  "http_put_response_hop_limit": 2,<br>  "http_tokens": "optional"<br>}</pre> | no |
 | <a name="input_min_size"></a> [min\_size](#input\_min\_size) | Minimum size of the nodes in the cluster | `number` | `1` | no |
 | <a name="input_name"></a> [name](#input\_name) | The name of the cluster | `any` | n/a | yes |
+| <a name="input_node_group_defaults"></a> [node\_group\_defaults](#input\_node\_group\_defaults) | ECS node group default configurations | `any` | `{}` | no |
+| <a name="input_node_groups"></a> [node\_groups](#input\_node\_groups) | ECS node group definitions to create | `any` | `{}` | no |
 | <a name="input_non_ecs_image_minimum_cleanup_age"></a> [non\_ecs\_image\_minimum\_cleanup\_age](#input\_non\_ecs\_image\_minimum\_cleanup\_age) | The minimum time interval between when a non ECS image is created and when it can be considered for automated image cleanup. | `string` | `"1h"` | no |
-| <a name="input_private_subnet_ids"></a> [private\_subnet\_ids](#input\_private\_subnet\_ids) | The list of private subnets to place the instances in | `list` | n/a | yes |
 | <a name="input_spot_instances"></a> [spot\_instances](#input\_spot\_instances) | Enable or disable spot instances | `bool` | `false` | no |
+| <a name="input_subnet_ids"></a> [subnet\_ids](#input\_subnet\_ids) | A list of subnet IDs where the nodes/node groups will be provisioned. | `list(string)` | `[]` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Map of tags to assign to bucket. | `map(string)` | `{}` | no |
+| <a name="input_target_group_arns"></a> [target\_group\_arns](#input\_target\_group\_arns) | A set of `aws_alb_target_group` ARNs, for use with Application or Network Load Balancing | `list(any)` | `[]` | no |
 | <a name="input_tg_health_check_port"></a> [tg\_health\_check\_port](#input\_tg\_health\_check\_port) | port on which to listen to health check from ec2 instance. Default is disabled. | `string` | `""` | no |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | The VPC id | `any` | n/a | yes |
 
@@ -150,8 +156,10 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_default_alb_target_group"></a> [default\_alb\_target\_group](#output\_default\_alb\_target\_group) | backward compatibility |
-| <a name="output_default_lb_target_group"></a> [default\_lb\_target\_group](#output\_default\_lb\_target\_group) | n/a |
-| <a name="output_ecs_instance_security_group_id"></a> [ecs\_instance\_security\_group\_id](#output\_ecs\_instance\_security\_group\_id) | n/a |
+| <a name="output_cloudwatch_log_group_arn"></a> [cloudwatch\_log\_group\_arn](#output\_cloudwatch\_log\_group\_arn) | ARN of CloudWatch log group created |
+| <a name="output_cloudwatch_log_group_name"></a> [cloudwatch\_log\_group\_name](#output\_cloudwatch\_log\_group\_name) | Name of CloudWatch log group created |
+| <a name="output_cluster_arn"></a> [cluster\_arn](#output\_cluster\_arn) | ARN that identifies the cluster |
+| <a name="output_cluster_id"></a> [cluster\_id](#output\_cluster\_id) | ID that identifies the cluster |
+| <a name="output_cluster_name"></a> [cluster\_name](#output\_cluster\_name) | Name that identifies the cluster |
 
 <!-- END_TF_DOCS -->
