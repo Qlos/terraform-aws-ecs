@@ -68,23 +68,26 @@ datetime_format = %Y-%m-%dT%H:%M:%SZ
 EOF
 
 #Check IMDSv1 or IMDSv2 is being used on the instance
-status_code=$(curl -s -o /dev/null -w "%{http_code}" http://169.254.169.254/latest/meta-data/)
+status_code=$(curl -s -o /dev/null -w "%%{http_code}" http://169.254.169.254/latest/meta-data/)
 
 # Set the region to send CloudWatch Logs data to (the region where the container instance is located)
 # Get availability zone where the container instance is located and remove the trailing character to give us the region.
 # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html
 if [[ "$status_code" -eq 200 ]]
 then
-  region=$(curl http://169.254.169.254/latest/meta-data/placement/availability-zone | sed s'/.$//')
+  region=$(curl http://169.254.169.254/latest/meta-data/placement/availability-zone)
 else
-  region=$(TOKEN=`curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"` && curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/placement/availability-zone | sed s'/.$//')
+  region=$(TOKEN=`curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"` && curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/placement/availability-zone)
 fi
 
-# Replace the default log region with the region where the container instance is located.
-# https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/QuickStartEC2Instance.html#running-ec2-step-2
-sed -i -e "s/region = us-east-1/region = $region/g" /etc/awslogs/awscli.conf
 # Replace "{region}" with Available Zone of container instance
 sed -i -e "s/{region}/$region/g" /etc/awslogs/awslogs.conf
+
+# transform AZ to region
+region=$(echo $region | sed s'/.$//')
+# Replace the default log region with the region where the container instance is located.
+# https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/QuickStartEC2Instance.html#running-ec2-step-2
+sed -i -e -E "s/region = (.*)/region = $region/g" /etc/awslogs/awscli.conf
 
 # Set the ip address of the node
 # Get the ipv4 of the container instance
