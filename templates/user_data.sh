@@ -28,8 +28,8 @@ ${ecs_config}
 # Inject the CloudWatch Logs configuration file contents
 cat > /etc/awslogs/awslogs.conf <<- EOF
 [general]
-state_file = /var/lib/awslogs/agent-state        
- 
+state_file = /var/lib/awslogs/agent-state
+
 [/var/log/dmesg]
 file = /var/log/dmesg
 log_group_name = ${cloudwatch_prefix}/var/log/dmesg
@@ -75,7 +75,7 @@ region=$(curl 169.254.169.254/latest/meta-data/placement/availability-zone | sed
 # https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/QuickStartEC2Instance.html#running-ec2-step-2
 sed -i -e "s/region = us-east-1/region = $region/g" /etc/awslogs/awscli.conf
 
-# Set the ip address of the node 
+# Set the ip address of the node
 # Get the ipv4 of the container instance
 # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html
 container_instance_id=$(curl 169.254.169.254/latest/meta-data/local-ipv4)

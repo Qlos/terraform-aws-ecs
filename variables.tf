@@ -282,4 +282,3 @@ variable "tags" {
   default     = {}
   description = "Map of tags to assign to bucket."
 }
-

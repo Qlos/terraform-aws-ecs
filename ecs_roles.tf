@@ -25,31 +25,31 @@ resource "aws_iam_policy" "ecs_execution_task" {
   path = "/ecs/"
 
   policy = jsonencode({
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "ecr:GetAuthorizationToken",
-                "ecr:BatchCheckLayerAvailability",
-                "ecr:GetDownloadUrlForLayer",
-                "ecr:BatchGetImage",
-                "logs:CreateLogGroup",
-                "logs:CreateLogStream",
-                "logs:PutLogEvents"
-            ],
-            "Resource": "*"
-        },
-        {
-            "Effect": "Allow",
-            "Action": [
-                "kms:Decrypt",
-                "secretsmanager:GetSecretValue"
-            ],
-            "Resource": [
-                "*"
-            ]
-        }
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Effect" : "Allow",
+        "Action" : [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage",
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        "Resource" : "*"
+      },
+      {
+        "Effect" : "Allow",
+        "Action" : [
+          "kms:Decrypt",
+          "secretsmanager:GetSecretValue"
+        ],
+        "Resource" : [
+          "*"
+        ]
+      }
     ]
   })
 
@@ -99,12 +99,12 @@ data "template_file" "policy" {
 }
 
 resource "aws_iam_policy" "ecs_default_task" {
-  name   = "${var.name}_ecs_default_task"
-  path   = "/"
+  name = "${var.name}_ecs_default_task"
+  path = "/"
 
   policy = data.template_file.policy.rendered
 
-  tags   = var.tags
+  tags = var.tags
 }
 
 resource "aws_iam_policy_attachment" "ecs_default_task" {
