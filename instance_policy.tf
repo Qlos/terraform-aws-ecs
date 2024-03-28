@@ -39,3 +39,8 @@ resource "aws_iam_role_policy_attachment" "ecs_ec2_cloudwatch_role" {
   role       = aws_iam_role.ecs_instance_role.id
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
 }
+
+resource "aws_iam_role_policy_attachment" "ecs_ec2_ssm_role" {
+  role       = aws_iam_role.ecs_instance_role.id
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedEC2InstanceDefaultPolicy"
+}

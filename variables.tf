@@ -1,10 +1,46 @@
-variable "cloudwatch_prefix" {
-  default     = ""
-  description = "If you want to avoid cloudwatch collision or you don't want to merge all logs to one log group specify a prefix"
-}
-
 variable "name" {
   description = "The name of the cluster"
+}
+
+variable "cluster_configuration" {
+  description = "The execute command configuration for the cluster"
+  type        = any
+  default     = {}
+}
+
+variable "cluster_settings" {
+  description = "List of configuration block(s) with cluster settings. For example, this can be used to enable CloudWatch Container Insights for a cluster"
+  type        = any
+  default = [
+    {
+      name  = "containerInsights"
+      value = "enabled"
+    }
+  ]
+}
+
+variable "cluster_service_connect_defaults" {
+  description = "Configures a default Service Connect namespace"
+  type        = map(string)
+  default     = {}
+}
+
+variable "create_cloudwatch_log_group" {
+  description = "Determines whether a log group is created by this module for the cluster logs. If not, AWS will automatically create one if logging is enabled"
+  type        = bool
+  default     = true
+}
+
+variable "cloudwatch_log_group_retention_in_days" {
+  description = "Number of days to retain log events"
+  type        = number
+  default     = 90
+}
+
+variable "cloudwatch_log_group_tags" {
+  description = "A map of additional tags to add to the log group created"
+  type        = map(string)
+  default     = {}
 }
 
 variable "instance_group" {
@@ -16,7 +52,7 @@ variable "vpc_id" {
   description = "The VPC id"
 }
 
-variable "aws_ami" {
+variable "ami_id" {
   default     = ""
   description = "The AWS ami id to use"
 }
@@ -27,12 +63,12 @@ variable "instance_type" {
 }
 
 variable "familiar_instance_types" {
-  type        = list
+  type        = list(any)
   default     = ["t3.large", "m5.large", "c5.xlarge"]
   description = "Used only with `spot_instance` variable. List of familiar instance types to use with lowest weight from `instance_type`"
 }
 
-variable "spot_instances" {  
+variable "spot_instances" {
   type        = bool
   default     = false
   description = "Enable or disable spot instances"
@@ -54,9 +90,10 @@ variable "desired_capacity" {
   description = "The desired capacity of the cluster"
 }
 
-variable "private_subnet_ids" {
-  type        = list
-  description = "The list of private subnets to place the instances in"
+variable "subnet_ids" {
+  description = "A list of subnet IDs where the nodes/node groups will be provisioned."
+  type        = list(string)
+  default     = []
 }
 
 variable "create_security_group" {
@@ -99,17 +136,18 @@ variable "alb_security_group_id" {
 
 variable "allowed_security_group_ids" {
   default     = []
-  type        = list
+  type        = list(any)
   description = "Allowed this AWS security groups to ECS cluster. Can be used only with `create_security_group` variable with `false` value."
 }
 
-variable "lb_target_group" {
-  default = ""
-  description = "LoadBalancer target group ARN"
+variable "target_group_arns" {
+  description = "A set of `aws_alb_target_group` ARNs, for use with Application or Network Load Balancing"
+  type        = list(any)
+  default     = []
 }
 
 variable "load_balancers" {
-  type        = list
+  type        = list(any)
   default     = []
   description = "The load balancers to couple to the instances. Only used when NOT using ALB"
 }
@@ -138,6 +176,18 @@ variable "custom_userdata_directives" {
   description = "Inject extra cloud-init directives in the instance template to be run on boot. Please visit a doc https://cloudinit.readthedocs.io/en/latest/"
 }
 
+variable "node_groups" {
+  description = "ECS node group definitions to create"
+  type        = any
+  default     = {}
+}
+
+variable "node_group_defaults" {
+  description = "ECS node group default configurations"
+  type        = any
+  default     = {}
+}
+
 variable "ecs_config" {
   default     = "echo '' > /etc/ecs/ecs.config"
   description = "Specify ecs configuration or get it from S3. Example: aws s3 cp s3://some-bucket/ecs.config /etc/ecs/ecs.config"
@@ -159,7 +209,7 @@ variable "ecs_log_level" {
   validation {
     condition     = contains(["crit", "error", "warn", "info", "debug"], var.ecs_log_level)
     error_message = "Available values \"crit\", \"error\", \"warn\", \"info\" or \"debug\"."
-  } 
+  }
 }
 
 variable "ecs_reserved_ports" {
@@ -208,8 +258,8 @@ variable "ecs_checkpoint" {
 }
 
 variable "ecs_container_stop_timeout" {
-   default     = "10m"
-   description = "Instance scoped configuration for time to wait for the container to exit normally before being forcibly killed." 
+  default     = "10m"
+  description = "Instance scoped configuration for time to wait for the container to exit normally before being forcibly killed."
 }
 
 variable "ecs_enable_spot_instance_draining" {

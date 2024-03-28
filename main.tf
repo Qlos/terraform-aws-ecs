@@ -1,29 +1,12 @@
 locals {
-  ecs_security_group_id = var.create_security_group == false ? (var.associated_security_group_id != "" ? var.associated_security_group_id : "") : aws_security_group.instance[0].id
-  user_data_block = <<-EOT
-Content-Type: multipart/mixed; boundary="//"
-MIME-Version: 1.0
+  execute_command_configuration = {
+    logging = "OVERRIDE"
+    log_configuration = {
+      cloud_watch_log_group_name = try(aws_cloudwatch_log_group.cluster[0].name, null)
+    }
+  }
 
---//
-Content-Type: text/cloud-config; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="cloud-config.txt"
-
-#cloud-config
-${var.custom_userdata_directives}
-
-output : { all : '| tee -a /var/log/cloud-init-output.log' }
-
---//
-Content-Type: text/x-shellscript; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="userdata.txt"
-
-${data.template_file.user_data.rendered}
---//--
-EOT
+  cloudwatch_cluster_name = "/aws/ecs/${var.name}"
 }
 
 # Get latest Linux 2 ECS-optimized AMI by Amazon
@@ -48,177 +31,19 @@ data "aws_ami" "latest_ecs_ami" {
   owners = ["amazon"]
 }
 
-resource "aws_launch_template" "launch_template" {
-  name_prefix             = "${var.name}_"
-  image_id               = var.aws_ami != "" ? var.aws_ami : data.aws_ami.latest_ecs_ami.image_id
-  instance_type          = var.instance_type
-  user_data              = base64encode(local.user_data_block)
-
-  key_name               = var.key_name
-
-  update_default_version = true
-
-  iam_instance_profile {
-    name = aws_iam_instance_profile.ecs.id
-  }
-
-  dynamic "block_device_mappings" {
-    for_each = var.block_device_mappings
-
-    content {
-      device_name = try(block_device_mappings.value.device_name, null)
-
-      dynamic "ebs" {
-        for_each = try([block_device_mappings.value.ebs], [])
-
-        content {
-          delete_on_termination = try(ebs.value.delete_on_termination, null)
-          encrypted             = try(ebs.value.encrypted, null)
-          iops                  = try(ebs.value.iops, null)
-          kms_key_id            = try(ebs.value.kms_key_id, null)
-          snapshot_id           = try(ebs.value.snapshot_id, null)
-          throughput            = try(ebs.value.throughput, null)
-          volume_size           = try(ebs.value.volume_size, null)
-          volume_type           = try(ebs.value.volume_type, null)
-        }
-      }
-
-      no_device    = try(block_device_mappings.value.no_device, null)
-      virtual_name = try(block_device_mappings.value.virtual_name, null)
-    }
-  }
-
-  dynamic "metadata_options" {
-    for_each = length(var.metadata_options) > 0 ? [var.metadata_options] : []
-
-    content {
-      http_endpoint               = try(metadata_options.value.http_endpoint, null)
-      http_protocol_ipv6          = try(metadata_options.value.http_protocol_ipv6, null)
-      http_put_response_hop_limit = try(metadata_options.value.http_put_response_hop_limit, null)
-      http_tokens                 = try(metadata_options.value.http_tokens, null)
-      instance_metadata_tags      = try(metadata_options.value.instance_metadata_tags, null)
-    }
-  }
-
-  dynamic "monitoring" {
-    for_each = var.enable_monitoring ? [1] : []
-
-    content {
-      enabled = var.enable_monitoring
-    }
-  }
-
-  network_interfaces {
-    security_groups             = ["${local.ecs_security_group_id}"]
-  }
-
-  tags = var.tags
-}
-
-# Instances are scaled across availability zones http://docs.aws.amazon.com/autoscaling/latest/userguide/auto-scaling-benefits.html 
-resource "aws_autoscaling_group" "asg_spot" {
-  count                = var.spot_instances == true ? 1 : 0
-  name                 = "${var.name}_${var.instance_group}"
-  max_size             = var.max_size
-  min_size             = var.min_size
-  desired_capacity     = var.desired_capacity
-  force_delete         = true
-  vpc_zone_identifier  = var.private_subnet_ids
-  load_balancers       = var.load_balancers
-
-  mixed_instances_policy {
-      instances_distribution {
-        on_demand_base_capacity                  = 0
-        on_demand_percentage_above_base_capacity = 0
-        spot_allocation_strategy                 = "lowest-price"
-      }
-
-      launch_template {
-        launch_template_specification {
-          launch_template_id = aws_launch_template.launch_template.id
-        }
-        
-        override {
-            instance_type = "${var.instance_type}"
-            weighted_capacity = "3"
-        }
-
-        dynamic "override" {
-            for_each = "${var.familiar_instance_types}"
-              content {
-                  instance_type = "${override.value}"
-                  weighted_capacity = "2"
-              }
-        }
-     }
-  }
-
-  dynamic "tag" {
-    for_each = merge(
-      {
-        "Name"        = "${var.name}_${var.instance_group}"
-      },
-      var.tags
-    )
-    content {
-      key                 = tag.key
-      value               = tag.value
-      propagate_at_launch = true
-    }
-  }
-
-  lifecycle {
-    ignore_changes = [load_balancers, target_group_arns]
-  }
-}
-
-resource "aws_autoscaling_group" "asg" {
-  count                = var.spot_instances == false ? 1 : 0
-  name                 = "${var.name}_${var.instance_group}"
-  max_size             = var.max_size
-  min_size             = var.min_size
-  desired_capacity     = var.desired_capacity
-  force_delete         = true
-  vpc_zone_identifier  = var.private_subnet_ids
-  load_balancers       = var.load_balancers
-
-  launch_template {
-    id      = aws_launch_template.launch_template.id
-    version = "$Latest"
-  }
-
-  dynamic "tag" {
-    for_each = merge(
-      {
-        "Name"        = "${var.name}_${var.instance_group}"
-      },
-      var.tags
-    )
-    content {
-      key                 = tag.key
-      value               = tag.value
-      propagate_at_launch = true
-    }
-  }
-
-  lifecycle {
-    ignore_changes = [load_balancers, target_group_arns]
-  }
-}
-
 data "template_file" "user_data" {
-  template = "${file("${path.module}/templates/user_data.sh")}"
+  template = file("${path.module}/templates/user_data.sh")
 
   vars = {
-    ecs_config                             = var.ecs_config
+    ecs_config                            = var.ecs_config
     ecs_reserved_ports                    = var.ecs_reserved_ports
     ecs_reserved_udp_ports                = var.ecs_reserved_udp_ports
     ecs_logging                           = var.ecs_logging
     ecs_log_level                         = var.ecs_log_level
-    ecs_log_file                           = var.ecs_log_file
+    ecs_log_file                          = var.ecs_log_file
     cluster_name                          = var.name
     custom_userdata                       = var.custom_userdata
-    cloudwatch_prefix                      = var.cloudwatch_prefix
+    cloudwatch_prefix                     = local.cloudwatch_cluster_name
     ecs_disable_image_cleanup             = var.ecs_disable_image_cleanup
     ecs_image_cleanup_interval            = var.ecs_image_cleanup_interval
     ecs_image_minimum_cleanup_age         = var.ecs_image_minimum_cleanup_age
@@ -230,23 +55,147 @@ data "template_file" "user_data" {
     ecs_image_pull_behavior               = var.ecs_image_pull_behavior
     ecs_datadir                           = var.ecs_datadir
     ecs_checkpoint                        = var.ecs_checkpoint
-    health_check_port                     = var.tg_health_check_port 
+    health_check_port                     = var.tg_health_check_port
   }
 }
 
-resource "aws_autoscaling_attachment" "asg_spot_attachment" {
-  count = var.lb_target_group != null ? (var.spot_instances == true ? 1 : 0) : 0
-  autoscaling_group_name = aws_autoscaling_group.asg_spot[0].id
-  lb_target_group_arn    = var.lb_target_group
-}
+resource "aws_ecs_cluster" "this" {
 
-resource "aws_autoscaling_attachment" "asg_attachment" {
-  count = var.lb_target_group != null ? (var.spot_instances == false ? 1 : 0) : 0
-  autoscaling_group_name = aws_autoscaling_group.asg[0].id
-  lb_target_group_arn    = var.lb_target_group
-}
-
-resource "aws_ecs_cluster" "cluster" {
   name = var.name
+
+  dynamic "configuration" {
+    for_each = var.create_cloudwatch_log_group ? [var.cluster_configuration] : []
+
+    content {
+      dynamic "execute_command_configuration" {
+        for_each = try([merge(local.execute_command_configuration, configuration.value.execute_command_configuration)], [{}])
+
+        content {
+          kms_key_id = try(execute_command_configuration.value.kms_key_id, null)
+          logging    = try(execute_command_configuration.value.logging, "DEFAULT")
+
+          dynamic "log_configuration" {
+            for_each = try([execute_command_configuration.value.log_configuration], [])
+
+            content {
+              cloud_watch_encryption_enabled = try(log_configuration.value.cloud_watch_encryption_enabled, null)
+              cloud_watch_log_group_name     = try(log_configuration.value.cloud_watch_log_group_name, null)
+              s3_bucket_name                 = try(log_configuration.value.s3_bucket_name, null)
+              s3_bucket_encryption_enabled   = try(log_configuration.value.s3_bucket_encryption_enabled, null)
+              s3_key_prefix                  = try(log_configuration.value.s3_key_prefix, null)
+            }
+          }
+        }
+      }
+    }
+  }
+
+  dynamic "configuration" {
+    for_each = !var.create_cloudwatch_log_group && length(var.cluster_configuration) > 0 ? [var.cluster_configuration] : []
+
+    content {
+      dynamic "execute_command_configuration" {
+        for_each = try([configuration.value.execute_command_configuration], [{}])
+
+        content {
+          kms_key_id = try(execute_command_configuration.value.kms_key_id, null)
+          logging    = try(execute_command_configuration.value.logging, "DEFAULT")
+
+          dynamic "log_configuration" {
+            for_each = try([execute_command_configuration.value.log_configuration], [])
+
+            content {
+              cloud_watch_encryption_enabled = try(log_configuration.value.cloud_watch_encryption_enabled, null)
+              cloud_watch_log_group_name     = try(log_configuration.value.cloud_watch_log_group_name, null)
+              s3_bucket_name                 = try(log_configuration.value.s3_bucket_name, null)
+              s3_bucket_encryption_enabled   = try(log_configuration.value.s3_bucket_encryption_enabled, null)
+              s3_key_prefix                  = try(log_configuration.value.s3_key_prefix, null)
+            }
+          }
+        }
+      }
+    }
+  }
+
+  dynamic "service_connect_defaults" {
+    for_each = length(var.cluster_service_connect_defaults) > 0 ? [var.cluster_service_connect_defaults] : []
+
+    content {
+      namespace = service_connect_defaults.value.namespace
+    }
+  }
+
+  dynamic "setting" {
+    for_each = flatten([var.cluster_settings])
+
+    content {
+      name  = setting.value.name
+      value = setting.value.value
+    }
+  }
+
   tags = var.tags
+}
+
+resource "aws_cloudwatch_log_group" "cluster" {
+  count = var.create_cloudwatch_log_group ? 1 : 0
+
+  name              = local.cloudwatch_cluster_name
+  retention_in_days = var.cloudwatch_log_group_retention_in_days
+
+  tags = merge(var.tags, var.cloudwatch_log_group_tags)
+}
+
+resource "aws_cloudwatch_log_group" "dmesg" {
+  count = var.create_cloudwatch_log_group ? 1 : 0
+
+  name              = "${local.cloudwatch_cluster_name}/var/log/dmesg"
+  retention_in_days = var.cloudwatch_log_group_retention_in_days
+
+  tags = merge(var.tags, var.cloudwatch_log_group_tags)
+}
+
+resource "aws_cloudwatch_log_group" "docker" {
+  count = var.create_cloudwatch_log_group ? 1 : 0
+
+  name              = "${local.cloudwatch_cluster_name}/var/log/docker"
+  retention_in_days = var.cloudwatch_log_group_retention_in_days
+
+  tags = merge(var.tags, var.cloudwatch_log_group_tags)
+}
+
+resource "aws_cloudwatch_log_group" "ecs-agent" {
+  count = var.create_cloudwatch_log_group ? 1 : 0
+
+  name              = "${local.cloudwatch_cluster_name}/var/log/ecs/ecs-agent.log"
+  retention_in_days = var.cloudwatch_log_group_retention_in_days
+
+  tags = merge(var.tags, var.cloudwatch_log_group_tags)
+}
+
+resource "aws_cloudwatch_log_group" "ecs-init" {
+  count = var.create_cloudwatch_log_group ? 1 : 0
+
+  name              = "${local.cloudwatch_cluster_name}/var/log/ecs/ecs-init.log"
+  retention_in_days = var.cloudwatch_log_group_retention_in_days
+
+  tags = merge(var.tags, var.cloudwatch_log_group_tags)
+}
+
+resource "aws_cloudwatch_log_group" "audit" {
+  count = var.create_cloudwatch_log_group ? 1 : 0
+
+  name              = "${local.cloudwatch_cluster_name}/var/log/ecs/audit.log"
+  retention_in_days = var.cloudwatch_log_group_retention_in_days
+
+  tags = merge(var.tags, var.cloudwatch_log_group_tags)
+}
+
+resource "aws_cloudwatch_log_group" "messages" {
+  count = var.create_cloudwatch_log_group ? 1 : 0
+
+  name              = "${local.cloudwatch_cluster_name}/var/log/messages"
+  retention_in_days = var.cloudwatch_log_group_retention_in_days
+
+  tags = merge(var.tags, var.cloudwatch_log_group_tags)
 }
