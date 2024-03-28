@@ -1,9 +1,21 @@
+# helper objects
+resource "random_string" "cp_random_suffix" {
+  length           = 8
+  special          = false
+  upper            = false
+}
+
+locals {
+  cp_names = { for k,v in var.capacity_providers : k => "${k}_${random_string.cp_random_suffix.result}" }
+}
+
 resource "aws_launch_template" "cp_asg_lt" {
   for_each      = var.capacity_providers
   name          = "ecs-cluster-${var.name}-cp-${each.key}"
   description   = "Launch template for capacity provider ${each.key} in ECS cluster ${var.name}"
   image_id      = var.aws_ami != "" ? var.aws_ami : data.aws_ami.latest_ecs_ami.image_id
   instance_type = try(each.value.launch_template.instance_type, null)
+  user_data     = base64encode(local.user_data_block)
 
   iam_instance_profile {
     arn = aws_iam_instance_profile.ecs.arn
@@ -19,14 +31,14 @@ resource "aws_launch_template" "cp_asg_lt" {
   }
 
   dynamic "credit_specification" {
-    for_each = try(each.value.launch_template.credit_specification, null)
+    for_each = try(each.value.launch_template.credit_specification, {})
     content {
       cpu_credits = credit_specification.value.cpu_credits # no try - will fail if credit_specification block will be empty
     }
   }
 
   dynamic "instance_requirements" {
-    for_each = try(each.value.launch_template.instance_requirements, null)
+    for_each = try(each.value.launch_template.instance_requirements, {})
     content {
       burstable_performance = try(instance_requirements.value.burstable_performance, "excluded")
       instance_generations = try(instance_requirements.value.instance_generations, "current")
@@ -47,7 +59,7 @@ resource "aws_launch_template" "cp_asg_lt" {
   }
 
   dynamic "monitoring" {
-    for_each = try(each.value.launch_template.monitoring, null)
+    for_each = try(each.value.launch_template.monitoring, {})
 
     content {
       enabled = monitoring.value.enabled
@@ -78,26 +90,37 @@ resource "aws_autoscaling_group" "cp_asg" {
   dynamic "tag" {
     for_each = var.tags
     content {
-      key                 = tag.value.key
+      key                 = tag.key
       propagate_at_launch = true
-      value               = tag.value.value
+      value               = tag.value
     }
+  }
+
+  lifecycle {
+    ignore_changes = [ tag, desired_capacity ]
   }
 }
 
 resource "aws_ecs_capacity_provider" "capacity_providers" {
   for_each = var.capacity_providers
-  name = each.key
+  name = local.cp_names[each.key]
   auto_scaling_group_provider {
     auto_scaling_group_arn = aws_autoscaling_group.cp_asg[each.key].arn
     managed_termination_protection = try(each.value.auto_scaling_group_provider.managed_termination_protection, "ENABLED")
     managed_draining = try(each.value.auto_scaling_group_provider.managed_draining, "ENABLED")
     managed_scaling {
-      instance_warmup_period    = try(each.value.auto_scaling_group_provider.managed_scaling.instance_warmup_period, null) # default 300
-      maximum_scaling_step_size = try(each.value.auto_scaling_group_provider.managed_scaling.maximum_scaling_step_size, null)
-      minimum_scaling_step_size = try(each.value.auto_scaling_group_provider.managed_scaling.minimum_scaling_step_size, null)
+      instance_warmup_period    = try(each.value.auto_scaling_group_provider.managed_scaling.instance_warmup_period, 0) # no warmup
+      maximum_scaling_step_size = try(each.value.auto_scaling_group_provider.managed_scaling.maximum_scaling_step_size, 1)
+      minimum_scaling_step_size = try(each.value.auto_scaling_group_provider.managed_scaling.minimum_scaling_step_size, 1)
       status                    = try(each.value.auto_scaling_group_provider.managed_scaling.status, "ENABLED")
-      target_capacity           = try(each.value.auto_scaling_group_provider.managed_scaling.target_capacity, null)
+      target_capacity           = try(each.value.auto_scaling_group_provider.managed_scaling.target_capacity, 100)
     }
   }
+}
+
+resource "aws_ecs_cluster_capacity_providers" "cp_assignment" {
+  for_each = var.capacity_providers
+  cluster_name = aws_ecs_cluster.cluster.name
+  capacity_providers = [ local.cp_names[each.key] ]
+  depends_on = [ aws_ecs_capacity_provider.capacity_providers ]
 }
