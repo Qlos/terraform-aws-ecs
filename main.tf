@@ -15,7 +15,8 @@ locals {
 
   cloudwatch_cluster_name = "/aws/ecs/${var.name}"
 
-  cp_names = { for k, v in var.capacity_providers : k => "${k}_${random_string.cp_random_suffix.result}" }
+  capacity_providers_names           = { for k, v in var.capacity_providers : k => "${k}_${random_string.cp_random_suffix.result}" }
+  node_groups_autoscaling_group_arns = compact([for group in module.node_group : group.autoscaling_group_arn])
 }
 
 # Get latest Linux 2 ECS-optimized AMI by Amazon
@@ -146,11 +147,11 @@ resource "aws_ecs_cluster" "this" {
   tags = var.tags
 }
 
-resource "aws_ecs_capacity_provider" "capacity_providers" {
+resource "aws_ecs_capacity_provider" "this" {
   for_each = var.capacity_providers
-  name     = local.cp_names[each.key]
+  name     = local.capacity_providers_names[each.key]
   auto_scaling_group_provider {
-    auto_scaling_group_arn         = module.node_group.autoscaling_group_arn[each.value.autoscaling_group_index]
+    auto_scaling_group_arn         = local.node_groups_autoscaling_group_arns[each.value.node_group_index]
     managed_termination_protection = try(each.value.auto_scaling_group_provider.managed_termination_protection, "ENABLED")
     managed_draining               = try(each.value.auto_scaling_group_provider.managed_draining, "ENABLED")
     managed_scaling {
@@ -163,11 +164,11 @@ resource "aws_ecs_capacity_provider" "capacity_providers" {
   }
 }
 
-resource "aws_ecs_cluster_capacity_providers" "cp_assignment" {
+resource "aws_ecs_cluster_capacity_providers" "this" {
   for_each           = var.capacity_providers
   cluster_name       = aws_ecs_cluster.this.name
-  capacity_providers = [local.cp_names[each.key]]
-  depends_on         = [aws_ecs_capacity_provider.capacity_providers]
+  capacity_providers = [local.capacity_providers_names[each.key]]
+  depends_on         = [aws_ecs_capacity_provider.this]
 }
 
 resource "aws_cloudwatch_log_group" "cluster" {
