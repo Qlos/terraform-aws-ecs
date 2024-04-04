@@ -1,3 +1,10 @@
+# helper objects
+resource "random_string" "cp_random_suffix" {
+  length  = 8
+  special = false
+  upper   = false
+}
+
 locals {
   execute_command_configuration = {
     logging = "OVERRIDE"
@@ -7,6 +14,8 @@ locals {
   }
 
   cloudwatch_cluster_name = "/aws/ecs/${var.name}"
+
+  cp_names = { for k, v in var.capacity_providers : k => "${k}_${random_string.cp_random_suffix.result}" }
 }
 
 # Get latest Linux 2 ECS-optimized AMI by Amazon
@@ -135,6 +144,30 @@ resource "aws_ecs_cluster" "this" {
   }
 
   tags = var.tags
+}
+
+resource "aws_ecs_capacity_provider" "capacity_providers" {
+  for_each = var.capacity_providers
+  name     = local.cp_names[each.key]
+  auto_scaling_group_provider {
+    auto_scaling_group_arn         = module.node_group.autoscaling_group_arn[each.value.autoscaling_group_index]
+    managed_termination_protection = try(each.value.auto_scaling_group_provider.managed_termination_protection, "ENABLED")
+    managed_draining               = try(each.value.auto_scaling_group_provider.managed_draining, "ENABLED")
+    managed_scaling {
+      instance_warmup_period    = try(each.value.auto_scaling_group_provider.managed_scaling.instance_warmup_period, 0) # no warmup
+      maximum_scaling_step_size = try(each.value.auto_scaling_group_provider.managed_scaling.maximum_scaling_step_size, 1)
+      minimum_scaling_step_size = try(each.value.auto_scaling_group_provider.managed_scaling.minimum_scaling_step_size, 1)
+      status                    = try(each.value.auto_scaling_group_provider.managed_scaling.status, "ENABLED")
+      target_capacity           = try(each.value.auto_scaling_group_provider.managed_scaling.target_capacity, 100)
+    }
+  }
+}
+
+resource "aws_ecs_cluster_capacity_providers" "cp_assignment" {
+  for_each           = var.capacity_providers
+  cluster_name       = aws_ecs_cluster.this.name
+  capacity_providers = [local.cp_names[each.key]]
+  depends_on         = [aws_ecs_capacity_provider.capacity_providers]
 }
 
 resource "aws_cloudwatch_log_group" "cluster" {

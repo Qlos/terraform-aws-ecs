@@ -174,7 +174,7 @@ variable "instance_requirements" {
 variable "instance_type" {
   description = "The type of the instance to launch"
   type        = string
-  default     = ""
+  default     = null
 }
 
 variable "key_name" {

@@ -45,11 +45,14 @@ variable "cloudwatch_log_group_tags" {
 
 variable "instance_group" {
   default     = "default"
+  type        = string
   description = "The name of the instances that you consider as a group"
 }
 
 variable "vpc_id" {
-  description = "The VPC id"
+  description = "ID of the VPC where the cluster security group will be provisioned"
+  type        = string
+  default     = null
 }
 
 variable "ami_id" {
@@ -186,12 +189,6 @@ variable "node_group_defaults" {
   description = "ECS node group default configurations"
   type        = any
   default     = {}
-}
-
-variable "capacity_providers" {
-  type        = map(any)
-  default     = {}
-  description = "Configuration of Capacity Providers for ECS cluster autoscaling"
 }
 
 variable "ecs_config" {

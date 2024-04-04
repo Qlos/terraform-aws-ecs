@@ -109,6 +109,6 @@ resource "aws_iam_policy" "ecs_default_task" {
 
 resource "aws_iam_policy_attachment" "ecs_default_task" {
   name       = "${var.name}_ecs_default_task"
-  roles      = ["${aws_iam_role.ecs_default_task.name}"]
+  roles      = [aws_iam_role.ecs_default_task.name]
   policy_arn = aws_iam_policy.ecs_default_task.arn
 }

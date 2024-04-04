@@ -107,7 +107,7 @@ module "node_group" {
 
   ebs_optimized = try(each.value.ebs_optimized, var.node_group_defaults.ebs_optimized, null)
   ami_id        = try(each.value.ami_id, var.node_group_defaults.ami_id, coalesce(var.ami_id, data.aws_ami.latest_ecs_ami.image_id))
-  instance_type = try(each.value.instance_type, var.node_group_defaults.instance_type, var.instance_type)
+  instance_type = try(each.value.instance_type, var.node_group_defaults.instance_type, var.instance_type, null)
   key_name      = try(each.value.key_name, var.node_group_defaults.key_name, var.key_name)
 
   user_data = try(each.value.user_data, var.node_group_defaults.user_data, local.user_data_block)

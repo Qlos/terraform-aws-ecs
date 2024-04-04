@@ -28,7 +28,9 @@
 | [aws_cloudwatch_log_group.ecs-agent](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_cloudwatch_log_group.ecs-init](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_cloudwatch_log_group.messages](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
+| [aws_ecs_capacity_provider.capacity_providers](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_capacity_provider) | resource |
 | [aws_ecs_cluster.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_cluster) | resource |
+| [aws_ecs_cluster_capacity_providers.cp_assignment](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_cluster_capacity_providers) | resource |
 | [aws_iam_instance_profile.ecs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_instance_profile) | resource |
 | [aws_iam_policy.ecs_default_task](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
 | [aws_iam_policy.ecs_execution_task](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
@@ -48,6 +50,7 @@
 | [aws_security_group_rule.ecs_health_check_for_alb](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
 | [aws_security_group_rule.outbound_internet_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
 | [aws_sns_topic.ecs_events](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic) | resource |
+| [random_string.cp_random_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
 | [aws_ami.latest_ecs_ami](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami) | data source |
 | [aws_caller_identity.current_event_identity](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
 | [aws_caller_identity.current_role_identity](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
@@ -66,6 +69,7 @@
 | <a name="input_ami_id"></a> [ami\_id](#input\_ami\_id) | The AWS ami id to use | `string` | `""` | no |
 | <a name="input_associated_security_group_id"></a> [associated\_security\_group\_id](#input\_associated\_security\_group\_id) | Variable to use only with `associated_security_group_id` variable. This security group will be assigned to the ecs cluster instead of creating a new page | `string` | `""` | no |
 | <a name="input_block_device_mappings"></a> [block\_device\_mappings](#input\_block\_device\_mappings) | Specify volumes to attach to the instance besides the volumes specified by the AMI | `any` | `{}` | no |
+| <a name="input_capacity_providers"></a> [capacity\_providers](#input\_capacity\_providers) | Configuration of Capacity Providers for ECS cluster autoscaling | `map(any)` | `{}` | no |
 | <a name="input_cloudwatch_log_group_retention_in_days"></a> [cloudwatch\_log\_group\_retention\_in\_days](#input\_cloudwatch\_log\_group\_retention\_in\_days) | Number of days to retain log events | `number` | `90` | no |
 | <a name="input_cloudwatch_log_group_tags"></a> [cloudwatch\_log\_group\_tags](#input\_cloudwatch\_log\_group\_tags) | A map of additional tags to add to the log group created | `map(string)` | `{}` | no |
 | <a name="input_cluster_configuration"></a> [cluster\_configuration](#input\_cluster\_configuration) | The execute command configuration for the cluster | `any` | `{}` | no |
@@ -96,7 +100,7 @@
 | <a name="input_enable_monitoring"></a> [enable\_monitoring](#input\_enable\_monitoring) | Enables/disables detailed monitoring | `bool` | `true` | no |
 | <a name="input_familiar_instance_types"></a> [familiar\_instance\_types](#input\_familiar\_instance\_types) | Used only with `spot_instance` variable. List of familiar instance types to use with lowest weight from `instance_type` | `list(any)` | <pre>[<br>  "t3.large",<br>  "m5.large",<br>  "c5.xlarge"<br>]</pre> | no |
 | <a name="input_instance_group"></a> [instance\_group](#input\_instance\_group) | The name of the instances that you consider as a group | `string` | `"default"` | no |
-| <a name="input_instance_type"></a> [instance\_type](#input\_instance\_type) | AWS main type of EC2 instance to use | `string` | `"t2.micro"` | no |
+| <a name="input_instance_type"></a> [instance\_type](#input\_instance\_type) | AWS main type of EC2 instance to use | `any` | `null` | no |
 | <a name="input_key_name"></a> [key\_name](#input\_key\_name) | SSH key name to be used | `any` | n/a | yes |
 | <a name="input_load_balancers"></a> [load\_balancers](#input\_load\_balancers) | The load balancers to couple to the instances. Only used when NOT using ALB | `list(any)` | `[]` | no |
 | <a name="input_max_size"></a> [max\_size](#input\_max\_size) | Maximum size of the nodes in the cluster | `number` | `1` | no |
@@ -122,5 +126,12 @@
 | <a name="output_cluster_arn"></a> [cluster\_arn](#output\_cluster\_arn) | ARN that identifies the cluster |
 | <a name="output_cluster_id"></a> [cluster\_id](#output\_cluster\_id) | ID that identifies the cluster |
 | <a name="output_cluster_name"></a> [cluster\_name](#output\_cluster\_name) | Name that identifies the cluster |
+| <a name="output_node_groups"></a> [node\_groups](#output\_node\_groups) | Map of attribute maps for all ECS node groups created |
+| <a name="output_node_groups_autoscaling_group_arns"></a> [node\_groups\_autoscaling\_group\_arns](#output\_node\_groups\_autoscaling\_group\_arns) | List of the ARNs for this autoscaling group |
+| <a name="output_node_groups_autoscaling_group_ids"></a> [node\_groups\_autoscaling\_group\_ids](#output\_node\_groups\_autoscaling\_group\_ids) | List of the autoscaling group ids |
+| <a name="output_node_groups_autoscaling_group_names"></a> [node\_groups\_autoscaling\_group\_names](#output\_node\_groups\_autoscaling\_group\_names) | List of the autoscaling group names created by ECS node groups |
+| <a name="output_node_groups_launch_template_arns"></a> [node\_groups\_launch\_template\_arns](#output\_node\_groups\_launch\_template\_arns) | List of the ARNs of the launch templates |
+| <a name="output_node_groups_launch_template_ids"></a> [node\_groups\_launch\_template\_ids](#output\_node\_groups\_launch\_template\_ids) | List of the IDs of the launch templates |
+| <a name="output_node_groups_launch_template_names"></a> [node\_groups\_launch\_template\_names](#output\_node\_groups\_launch\_template\_names) | List of the names of the launch templates |
 
 <!-- END_TF_DOCS -->
