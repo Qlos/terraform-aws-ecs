@@ -288,3 +288,9 @@ variable "tags" {
   default     = {}
   description = "Map of tags to assign to bucket."
 }
+
+variable "ecs_services" {
+  type        = map(any)
+  default     = {}
+  description = "Configuration of ECS services running on the cluster"
+}
