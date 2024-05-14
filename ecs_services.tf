@@ -33,4 +33,9 @@ module "ecs_services" {
 
   # common
   tags = try(each.value.tags, {})
+
+  # service discovery
+  service_discovery = try(each.value.service_discovery, {})
+
+  depends_on = [ aws_service_discovery_private_dns_namespace.this ]
 }

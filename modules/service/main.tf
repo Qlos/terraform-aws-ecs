@@ -59,7 +59,7 @@ resource "aws_ecs_service" "this" {
   wait_for_steady_state              = var.wait_for_steady_state
 
   dynamic "capacity_provider_strategy" {
-    for_each = length(var.capacity_provider_strategy) > 0 ? [1] : []
+    for_each = length(var.capacity_provider_strategy) > 0 ? [var.capacity_provider_strategy] : []
     content {
       base              = try(capacity_provider_strategy.value.base, null)
       capacity_provider = capacity_provider_strategy.value.capacity_provider
@@ -68,7 +68,7 @@ resource "aws_ecs_service" "this" {
   }
 
   dynamic "load_balancer" {
-    for_each = length(var.load_balancer) > 0 ? [1] : []
+    for_each = length(var.load_balancer) > 0 ? [var.load_balancer] : []
     content { # all is required
       target_group_arn = load_balancer.value.target_group_arn
       container_name   = load_balancer.value.container_name
@@ -81,6 +81,23 @@ resource "aws_ecs_service" "this" {
     content {
       subnets         = var.service_subnet_ids
       security_groups = var.service_security_group_ids
+    }
+  }
+
+  # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_service#service_connect_configuration
+  dynamic "service_connect_configuration" {
+    for_each = length(try(var.service_discovery, {})) > 0 ? [var.service_discovery] : []
+    content {
+      enabled = true
+      namespace = service_connect_configuration.value.namespace
+      dynamic "service" {
+        for_each = try(service_connect_configuration.value.services, [])
+        content {
+          discovery_name = try(service.value.discovery_name, null)
+          port_name = service.value.port_name
+          # currently no support for other params like client_alias, timeout, tls, ingress_port_override
+        }
+      }
     }
   }
 }

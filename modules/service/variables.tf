@@ -129,3 +129,9 @@ variable "tags" {
   type    = map(string)
   default = {}
 }
+
+# service connect
+variable "service_discovery" {
+  type = map(string)
+  default = {}
+}

@@ -294,3 +294,8 @@ variable "ecs_services" {
   default     = {}
   description = "Configuration of ECS services running on the cluster"
 }
+
+variable "service_discovery_namespaces" {
+  type = map(string) # format: "name": "description"
+  default = {}
+}
