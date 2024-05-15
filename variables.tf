@@ -310,10 +310,7 @@ variable "ecs_services" {
 }
 
 variable "service_discovery_namespaces" {
-  type = map(object({
-    name        = string
-    description = string
-  }))
+  type        = map(any)
   default     = {}
   description = "Map of ECS service discovery namespaces."
 }
