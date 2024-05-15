@@ -90,7 +90,7 @@ variable "container_definitions_template_file" {
 }
 
 variable "container_definitions_template_vars" {
-  type = object(any)
+  type = map(string)
 }
 
 variable "network_mode" {
