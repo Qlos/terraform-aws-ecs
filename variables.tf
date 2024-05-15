@@ -263,6 +263,20 @@ variable "ecs_checkpoint" {
   description = "Whether to save the checkpoint state to the location specified with `ECS_DATADIR`."
 }
 
+variable "ecs_engine_auth_type" {
+  default     = ""
+  description = "The type of auth data that is stored in the ECS_ENGINE_AUTH_DATA key."
+  validation {
+    condition     = contains(["docker", "dockercfg"], var.ecs_engine_auth_type)
+    error_message = "Available values \"docker\", \"dockercfg\"."
+  }
+}
+
+variable "ecs_engine_auth_data" {
+  default     = ""
+  description = "Docker [auth data](https://pkg.go.dev/github.com/aws/amazon-ecs-agent/agent/dockerclient/dockerauth) formatted as defined by `ECS_ENGINE_AUTH_TYPE`."
+}
+
 variable "ecs_container_stop_timeout" {
   default     = "10m"
   description = "Instance scoped configuration for time to wait for the container to exit normally before being forcibly killed."
@@ -287,4 +301,19 @@ variable "tags" {
   type        = map(string)
   default     = {}
   description = "Map of tags to assign to bucket."
+}
+
+variable "ecs_services" {
+  type        = map(any)
+  default     = {}
+  description = "Configuration of ECS services running on the cluster"
+}
+
+variable "service_discovery_namespaces" {
+  type = map(object({
+    name        = string
+    description = string
+  }))
+  default     = {}
+  description = "Map of ECS service discovery namespaces."
 }

@@ -22,7 +22,9 @@ ${ecs_config}
   echo "ECS_IMAGE_PULL_BEHAVIOR=${ecs_image_pull_behavior}"
   echo "ECS_DATADIR=${ecs_datadir}"
   echo "ECS_CHECKPOINT=${ecs_checkpoint}"
-  echo 'ECS_AVAILABLE_LOGGING_DRIVERS=${ecs_logging}'
+  echo "ECS_ENGINE_AUTH_TYPE=${ecs_engine_auth_type}"
+  echo "ECS_ENGINE_AUTH_DATA=${ecs_engine_auth_data}"
+  echo "ECS_AVAILABLE_LOGGING_DRIVERS=${ecs_logging}"
 } >> /etc/ecs/ecs.config
 
 # Inject the CloudWatch Logs configuration file contents
