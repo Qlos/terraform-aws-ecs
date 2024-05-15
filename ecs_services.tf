@@ -20,7 +20,7 @@ module "ecs_services" {
 
   # task definition parameters
   task_definition_family              = each.value.task_definition_family
-  execution_role_arn                  = try(each.value.execution_role_arn, "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/ecsTaskExecutionRole")
+  execution_role_arn                  = try(each.value.execution_role_arn, "arn:aws:iam::${data.aws_caller_identity.current_role_identity.account_id}:role/ecsTaskExecutionRole")
   task_role_arn                       = try(each.value.task_role_arn, null)
   container_definitions_template_file = each.value.container_definitions_template_file
   container_definitions_template_vars = each.value.container_definitions_template_vars
