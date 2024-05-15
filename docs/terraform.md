@@ -115,7 +115,7 @@
 | <a name="input_node_group_defaults"></a> [node\_group\_defaults](#input\_node\_group\_defaults) | ECS node group default configurations | `any` | `{}` | no |
 | <a name="input_node_groups"></a> [node\_groups](#input\_node\_groups) | ECS node group definitions to create | `any` | `{}` | no |
 | <a name="input_non_ecs_image_minimum_cleanup_age"></a> [non\_ecs\_image\_minimum\_cleanup\_age](#input\_non\_ecs\_image\_minimum\_cleanup\_age) | The minimum time interval between when a non ECS image is created and when it can be considered for automated image cleanup. | `string` | `"1h"` | no |
-| <a name="input_service_discovery_namespaces"></a> [service\_discovery\_namespaces](#input\_service\_discovery\_namespaces) | Map of ECS service discovery namespaces. | <pre>map(object({<br>    name        = string<br>    description = string<br>  }))</pre> | `{}` | no |
+| <a name="input_service_discovery_namespaces"></a> [service\_discovery\_namespaces](#input\_service\_discovery\_namespaces) | Map of ECS service discovery namespaces. | `map(any)` | `{}` | no |
 | <a name="input_spot_instances"></a> [spot\_instances](#input\_spot\_instances) | Enable or disable spot instances | `bool` | `false` | no |
 | <a name="input_subnet_ids"></a> [subnet\_ids](#input\_subnet\_ids) | A list of subnet IDs where the nodes/node groups will be provisioned. | `list(string)` | `[]` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Map of tags to assign to bucket. | `map(string)` | `{}` | no |

@@ -78,11 +78,13 @@ variable "task_definition_family" {
 }
 
 variable "execution_role_arn" {
-  type = string
+  type    = string
+  default = ""
 }
 
 variable "task_role_arn" {
-  type = string
+  type    = string
+  default = ""
 }
 
 variable "container_definitions_template_file" {
