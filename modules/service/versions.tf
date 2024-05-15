@@ -7,5 +7,5 @@ terraform {
     }
   }
 
-  required_version = ">= 0.14" # I suggest to change to at least 1.7
+  required_version = ">= 1.7"
 }
