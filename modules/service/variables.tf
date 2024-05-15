@@ -32,42 +32,42 @@ variable "enable_execute_command" {
 }
 
 variable "health_check_grace_period_seconds" {
-  type = number
+  type    = number
   default = null
 }
 
 variable "launch_type" {
-  type = string
+  type    = string
   default = null
 }
 
 variable "wait_for_steady_state" {
-  type = bool
+  type    = bool
   default = false
 }
 
 variable "load_balancer" {
-  type = map(string)
+  type    = map(string)
   default = {}
 }
 
 variable "propagate_tags" {
-  type = string
+  type    = string
   default = "TASK_DEFINITION"
 }
 
 variable "scheduling_strategy" {
-  type = string
+  type    = string
   default = "REPLICA"
 }
 
 variable "service_subnet_ids" {
-  type = list(string)
+  type    = list(string)
   default = []
 }
 
 variable "service_security_group_ids" {
-  type = list(string)
+  type    = list(string)
   default = null
 }
 
@@ -119,7 +119,7 @@ variable "skip_destroy" {
 }
 
 variable "volumes" {
-  type = list(map(any))
+  type    = list(map(any))
   default = []
 }
 
@@ -132,6 +132,6 @@ variable "tags" {
 
 # service connect
 variable "service_discovery" {
-  type = map(string)
+  type    = map(string)
   default = {}
 }

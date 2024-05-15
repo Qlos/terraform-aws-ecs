@@ -277,11 +277,6 @@ variable "ecs_engine_auth_data" {
   description = "Docker [auth data](https://pkg.go.dev/github.com/aws/amazon-ecs-agent/agent/dockerclient/dockerauth) formatted as defined by `ECS_ENGINE_AUTH_TYPE`."
 }
 
-variable "ecs_engine_auth_data" {
-  default     = "true"
-  description = "Whether to save the checkpoint state to the location specified with `ECS_DATADIR`."
-}
-
 variable "ecs_container_stop_timeout" {
   default     = "10m"
   description = "Instance scoped configuration for time to wait for the container to exit normally before being forcibly killed."
@@ -315,6 +310,10 @@ variable "ecs_services" {
 }
 
 variable "service_discovery_namespaces" {
-  type = map(string) # format: "name": "description"
-  default = {}
+  type = map(object({
+    name        = string
+    description = string
+  }))
+  default     = {}
+  description = "Map of ECS service discovery namespaces."
 }

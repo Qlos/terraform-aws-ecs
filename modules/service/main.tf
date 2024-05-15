@@ -88,13 +88,13 @@ resource "aws_ecs_service" "this" {
   dynamic "service_connect_configuration" {
     for_each = length(try(var.service_discovery, {})) > 0 ? [var.service_discovery] : []
     content {
-      enabled = true
+      enabled   = true
       namespace = service_connect_configuration.value.namespace
       dynamic "service" {
         for_each = try(service_connect_configuration.value.services, [])
         content {
           discovery_name = try(service.value.discovery_name, null)
-          port_name = service.value.port_name
+          port_name      = service.value.port_name
           # currently no support for other params like client_alias, timeout, tls, ingress_port_override
         }
       }

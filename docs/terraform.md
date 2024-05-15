@@ -6,13 +6,14 @@
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 0.14 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.7 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 5.0 |
 
 ### Modules
 
 | Name | Source | Version |
 |------|--------|---------|
+| <a name="module_ecs_services"></a> [ecs\_services](#module\_ecs\_services) | ./modules/service | n/a |
 | <a name="module_node_group"></a> [node\_group](#module\_node\_group) | ./modules/node-group | n/a |
 
 ### Resources
@@ -28,9 +29,9 @@
 | [aws_cloudwatch_log_group.ecs-agent](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_cloudwatch_log_group.ecs-init](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_cloudwatch_log_group.messages](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
-| [aws_ecs_capacity_provider.capacity_providers](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_capacity_provider) | resource |
+| [aws_ecs_capacity_provider.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_capacity_provider) | resource |
 | [aws_ecs_cluster.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_cluster) | resource |
-| [aws_ecs_cluster_capacity_providers.cp_assignment](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_cluster_capacity_providers) | resource |
+| [aws_ecs_cluster_capacity_providers.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_cluster_capacity_providers) | resource |
 | [aws_iam_instance_profile.ecs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_instance_profile) | resource |
 | [aws_iam_policy.ecs_default_task](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
 | [aws_iam_policy.ecs_execution_task](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
@@ -49,6 +50,7 @@
 | [aws_security_group_rule.allowed_sgs_to_ecs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
 | [aws_security_group_rule.ecs_health_check_for_alb](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
 | [aws_security_group_rule.outbound_internet_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group_rule) | resource |
+| [aws_service_discovery_private_dns_namespace.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/service_discovery_private_dns_namespace) | resource |
 | [aws_sns_topic.ecs_events](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/sns_topic) | resource |
 | [random_string.cp_random_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
 | [aws_ami.latest_ecs_ami](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami) | data source |
@@ -86,6 +88,8 @@
 | <a name="input_ecs_datadir"></a> [ecs\_datadir](#input\_ecs\_datadir) | The name of the persistent data directory on the container that is running the Amazon ECS container agent. The directory is used to save information about the cluster and the agent state. | `string` | `"/data"` | no |
 | <a name="input_ecs_disable_image_cleanup"></a> [ecs\_disable\_image\_cleanup](#input\_ecs\_disable\_image\_cleanup) | Whether to disable automated image cleanup for the Amazon ECS agent. | `string` | `"false"` | no |
 | <a name="input_ecs_enable_spot_instance_draining"></a> [ecs\_enable\_spot\_instance\_draining](#input\_ecs\_enable\_spot\_instance\_draining) | Whether to enable Spot Instance draining for the container instance. If true, if the container instance receives a spot interruption notice, agent will set the instance's status to DRAINING, which gracefully shuts down and replaces all tasks running on the instance that are part of a service. | `string` | `"false"` | no |
+| <a name="input_ecs_engine_auth_data"></a> [ecs\_engine\_auth\_data](#input\_ecs\_engine\_auth\_data) | Docker [auth data](https://pkg.go.dev/github.com/aws/amazon-ecs-agent/agent/dockerclient/dockerauth) formatted as defined by `ECS_ENGINE_AUTH_TYPE`. | `string` | `""` | no |
+| <a name="input_ecs_engine_auth_type"></a> [ecs\_engine\_auth\_type](#input\_ecs\_engine\_auth\_type) | The type of auth data that is stored in the ECS\_ENGINE\_AUTH\_DATA key. | `string` | `""` | no |
 | <a name="input_ecs_engine_task_cleanup_wait_duration"></a> [ecs\_engine\_task\_cleanup\_wait\_duration](#input\_ecs\_engine\_task\_cleanup\_wait\_duration) | Default time to wait to delete containers for a stopped task. If set to less than 1 second, the value is ignored. | `string` | `"3h"` | no |
 | <a name="input_ecs_image_cleanup_interval"></a> [ecs\_image\_cleanup\_interval](#input\_ecs\_image\_cleanup\_interval) | The time interval between automated image cleanup cycles. If set to less than 10 minutes, the value is ignored. | `string` | `"30m"` | no |
 | <a name="input_ecs_image_minimum_cleanup_age"></a> [ecs\_image\_minimum\_cleanup\_age](#input\_ecs\_image\_minimum\_cleanup\_age) | The minimum time interval between when an image is pulled and when it can be considered for automated image cleanup. | `string` | `"1h"` | no |
@@ -97,6 +101,7 @@
 | <a name="input_ecs_policy_role_prefix"></a> [ecs\_policy\_role\_prefix](#input\_ecs\_policy\_role\_prefix) | The prefix of the parameters this role should be able to access | `string` | `""` | no |
 | <a name="input_ecs_reserved_ports"></a> [ecs\_reserved\_ports](#input\_ecs\_reserved\_ports) | An array of TCP ports that should be marked as unavailable for scheduling on this container instance. | `string` | `"[22, 2375, 2376, 51678, 51679, 51680]"` | no |
 | <a name="input_ecs_reserved_udp_ports"></a> [ecs\_reserved\_udp\_ports](#input\_ecs\_reserved\_udp\_ports) | An array of UDP ports that should be marked as unavailable for scheduling on this container instance. | `string` | `"[]"` | no |
+| <a name="input_ecs_services"></a> [ecs\_services](#input\_ecs\_services) | Configuration of ECS services running on the cluster | `map(any)` | `{}` | no |
 | <a name="input_enable_monitoring"></a> [enable\_monitoring](#input\_enable\_monitoring) | Enables/disables detailed monitoring | `bool` | `true` | no |
 | <a name="input_familiar_instance_types"></a> [familiar\_instance\_types](#input\_familiar\_instance\_types) | Used only with `spot_instance` variable. List of familiar instance types to use with lowest weight from `instance_type` | `list(any)` | <pre>[<br>  "t3.large",<br>  "m5.large",<br>  "c5.xlarge"<br>]</pre> | no |
 | <a name="input_instance_group"></a> [instance\_group](#input\_instance\_group) | The name of the instances that you consider as a group | `string` | `"default"` | no |
@@ -110,6 +115,7 @@
 | <a name="input_node_group_defaults"></a> [node\_group\_defaults](#input\_node\_group\_defaults) | ECS node group default configurations | `any` | `{}` | no |
 | <a name="input_node_groups"></a> [node\_groups](#input\_node\_groups) | ECS node group definitions to create | `any` | `{}` | no |
 | <a name="input_non_ecs_image_minimum_cleanup_age"></a> [non\_ecs\_image\_minimum\_cleanup\_age](#input\_non\_ecs\_image\_minimum\_cleanup\_age) | The minimum time interval between when a non ECS image is created and when it can be considered for automated image cleanup. | `string` | `"1h"` | no |
+| <a name="input_service_discovery_namespaces"></a> [service\_discovery\_namespaces](#input\_service\_discovery\_namespaces) | Map of ECS service discovery namespaces. | <pre>map(object({<br>    name        = string<br>    description = string<br>  }))</pre> | `{}` | no |
 | <a name="input_spot_instances"></a> [spot\_instances](#input\_spot\_instances) | Enable or disable spot instances | `bool` | `false` | no |
 | <a name="input_subnet_ids"></a> [subnet\_ids](#input\_subnet\_ids) | A list of subnet IDs where the nodes/node groups will be provisioned. | `list(string)` | `[]` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Map of tags to assign to bucket. | `map(string)` | `{}` | no |
