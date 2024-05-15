@@ -65,6 +65,8 @@ data "template_file" "user_data" {
     ecs_image_pull_behavior               = var.ecs_image_pull_behavior
     ecs_datadir                           = var.ecs_datadir
     ecs_checkpoint                        = var.ecs_checkpoint
+    ecs_engine_auth_type                  = var.ecs_engine_auth_type
+    ecs_engine_auth_data                  = var.ecs_engine_auth_data
     health_check_port                     = var.tg_health_check_port
   }
 }
