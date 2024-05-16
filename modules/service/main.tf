@@ -59,7 +59,7 @@ resource "aws_ecs_service" "this" {
   wait_for_steady_state              = var.wait_for_steady_state
 
   dynamic "capacity_provider_strategy" {
-    for_each = length(var.capacity_provider_strategy) > 0 ? [var.capacity_provider_strategy] : []
+    for_each = var.capacity_provider_strategy
     content {
       base              = try(capacity_provider_strategy.value.base, null)
       capacity_provider = capacity_provider_strategy.value.capacity_provider
@@ -68,8 +68,8 @@ resource "aws_ecs_service" "this" {
   }
 
   dynamic "load_balancer" {
-    for_each = length(var.load_balancer) > 0 ? [var.load_balancer] : []
-    content { # all is required
+    for_each = var.load_balancer
+    content { 
       target_group_arn = load_balancer.value.target_group_arn
       container_name   = load_balancer.value.container_name
       container_port   = load_balancer.value.container_port

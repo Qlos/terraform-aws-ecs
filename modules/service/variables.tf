@@ -3,8 +3,13 @@ variable "name" {
 }
 
 variable "capacity_provider_strategy" {
-  type    = map(string)
-  default = null
+  type = list(object({
+    capacity_provider = string
+    weight            = number
+    base              = number
+  }))
+  description = "The capacity provider strategies to use for the service. See `capacity_provider_strategy` configuration block: https://www.terraform.io/docs/providers/aws/r/ecs_service.html#capacity_provider_strategy"
+  default     = []
 }
 
 variable "cluster_id" {
@@ -47,8 +52,13 @@ variable "wait_for_steady_state" {
 }
 
 variable "load_balancer" {
-  type    = map(string)
-  default = {}
+  type = list(object({
+    container_name   = string
+    container_port   = number
+    target_group_arn = string
+  }))
+  description = "A list of load balancer config objects for the ECS service; see [ecs_service#load_balancer](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_service#load_balancer) docs"
+  default     = []
 }
 
 variable "propagate_tags" {
@@ -134,6 +144,6 @@ variable "tags" {
 
 # service connect
 variable "service_discovery" {
-  type    = map(string)
-  default = {}
+  type    = any
+  default = null
 }

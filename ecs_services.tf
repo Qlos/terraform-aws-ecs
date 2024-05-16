@@ -3,7 +3,7 @@ module "ecs_services" {
   for_each = var.ecs_services
 
   name                               = each.value.name
-  capacity_provider_strategy         = try(each.value.capacity_provider_strategy, null)
+  capacity_provider_strategy         = try(each.value.capacity_provider_strategy, [])
   cluster_id                         = aws_ecs_cluster.this.id
   deployment_maximum_percent         = try(each.value.deployment_maximum_percent, null)
   deployment_minimum_healthy_percent = try(each.value.deployment_minimum_healthy_percent, null)
@@ -12,7 +12,7 @@ module "ecs_services" {
   health_check_grace_period_seconds  = try(each.value.health_check_grace_period_seconds, null)
   launch_type                        = try(each.value.launch_type, null)
   wait_for_steady_state              = try(each.value.wait_for_steady_state, false)
-  load_balancer                      = try(each.value.load_balancer, {})
+  load_balancer                      = try(each.value.load_balancer, [])
   propagate_tags                     = try(each.value.propagate_tags, "TASK_DEFINITION")
   scheduling_strategy                = try(each.value.scheduling_strategy, "REPLICA")
   service_subnet_ids                 = try(each.value.service_subnet_ids, [])
@@ -35,7 +35,7 @@ module "ecs_services" {
   tags = try(each.value.tags, {})
 
   # service discovery
-  service_discovery = try(each.value.service_discovery, {})
+  service_discovery = try(each.value.service_discovery, null)
 
   depends_on = [aws_service_discovery_private_dns_namespace.this]
 }
