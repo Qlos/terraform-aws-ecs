@@ -69,7 +69,7 @@ resource "aws_ecs_service" "this" {
 
   dynamic "load_balancer" {
     for_each = var.load_balancer
-    content { 
+    content {
       target_group_arn = load_balancer.value.target_group_arn
       container_name   = load_balancer.value.container_name
       container_port   = load_balancer.value.container_port
@@ -93,9 +93,16 @@ resource "aws_ecs_service" "this" {
       dynamic "service" {
         for_each = try(service_connect_configuration.value.services, [])
         content {
-          discovery_name = try(service.value.discovery_name, null)
-          port_name      = service.value.port_name
-          # currently no support for other params like client_alias, timeout, tls, ingress_port_override
+          discovery_name        = try(service.value.discovery_name, null)
+          ingress_port_override = try(service.value.ingress_port_override, null)
+          port_name             = service.value.port_name
+          dynamic "client_alias" {
+            for_each = try([service.value.client_alias], [])
+            content {
+              dns_name = try(client_alias.value.dns_name, null)
+              port     = client_alias.value.port
+            }
+          }
         }
       }
     }
