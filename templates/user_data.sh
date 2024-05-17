@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Install awslogs and the jq JSON parser
-yum install -y awslogs jq aws-cli
+dnf install -y awslogs jq aws-cli
 
 # ECS config
 ${ecs_config}

@@ -25,7 +25,7 @@ data "aws_ami" "latest_ecs_ami" {
 
   filter {
     name   = "name"
-    values = ["al2023-ami-ecs-*"]
+    values = ["al2023-ami-ecs-hvm-*"]
   }
 
   filter {
