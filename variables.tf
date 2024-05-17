@@ -1,4 +1,5 @@
 variable "name" {
+  type        = string
   description = "The name of the cluster"
 }
 
@@ -44,20 +45,24 @@ variable "cloudwatch_log_group_tags" {
 }
 
 variable "instance_group" {
+  type        = string
   default     = "default"
   description = "The name of the instances that you consider as a group"
 }
 
 variable "vpc_id" {
+  type        = string
   description = "The VPC id"
 }
 
 variable "ami_id" {
+  type        = string
   default     = ""
   description = "The AWS ami id to use"
 }
 
 variable "instance_type" {
+  type        = string
   default     = null
   description = "AWS main type of EC2 instance to use"
 }
@@ -75,11 +80,13 @@ variable "spot_instances" {
 }
 
 variable "max_size" {
+  type        = number
   default     = 1
   description = "Maximum size of the nodes in the cluster"
 }
 
 variable "min_size" {
+  type        = number
   default     = 1
   description = "Minimum size of the nodes in the cluster"
 }
@@ -103,6 +110,7 @@ variable "create_security_group" {
 }
 
 variable "associated_security_group_id" {
+  type        = string
   default     = ""
   description = "Variable to use only with `associated_security_group_id` variable. This security group will be assigned to the ecs cluster instead of creating a new page"
 }
@@ -153,20 +161,24 @@ variable "load_balancers" {
 }
 
 variable "ecs_policy_role_prefix" {
+  type        = string
   default     = ""
   description = "The prefix of the parameters this role should be able to access"
 }
 
 variable "tg_health_check_port" {
+  type        = string
   default     = ""
   description = "port on which to listen to health check from ec2 instance. Default is disabled."
 }
 
 variable "key_name" {
+  type        = string
   description = "SSH key name to be used"
 }
 
 variable "custom_userdata" {
+  type        = string
   default     = ""
   description = "Inject extra bash command in the instance template to be run on boot"
 }
@@ -195,21 +207,25 @@ variable "capacity_providers" {
 }
 
 variable "ecs_config" {
+  type        = string
   default     = "echo '' > /etc/ecs/ecs.config"
   description = "Specify ecs configuration or get it from S3. Example: aws s3 cp s3://some-bucket/ecs.config /etc/ecs/ecs.config"
 }
 
 variable "ecs_logging" {
-  default     = "[\"json-file\", \"awslogs\", \"none\"]"
+  type        = string
+  default     = "[\\\"json-file\\\", \\\"awslogs\\\", \\\"none\\\"]"
   description = "Adding logging option to ECS that the Docker containers can use. It is possible to add fluentd as well"
 }
 
 variable "ecs_log_file" {
+  type        = string
   default     = ""
   description = "The location where agent logs should be written. If you are running the agent via ecs-init, which is the default method when using the Amazon ECS-optimized AMI, the in-container path will be /log and ecs-init mounts that out to /var/log/ecs/ on the host."
 }
 
 variable "ecs_log_level" {
+  type        = string
   default     = "info"
   description = "The level of detail to log."
   validation {
@@ -219,51 +235,61 @@ variable "ecs_log_level" {
 }
 
 variable "ecs_reserved_ports" {
+  type        = string
   default     = "[22, 2375, 2376, 51678, 51679, 51680]"
   description = "An array of TCP ports that should be marked as unavailable for scheduling on this container instance."
 }
 
 variable "ecs_reserved_udp_ports" {
+  type        = string
   default     = "[]"
   description = "An array of UDP ports that should be marked as unavailable for scheduling on this container instance."
 }
 
 variable "ecs_disable_image_cleanup" {
+  type        = string
   default     = "false"
   description = "Whether to disable automated image cleanup for the Amazon ECS agent."
 }
 
 variable "ecs_image_cleanup_interval" {
+  type        = string
   default     = "30m"
   description = "The time interval between automated image cleanup cycles. If set to less than 10 minutes, the value is ignored."
 }
 
 variable "ecs_image_minimum_cleanup_age" {
+  type        = string
   default     = "1h"
   description = "The minimum time interval between when an image is pulled and when it can be considered for automated image cleanup."
 }
 
 variable "ecs_num_images_delete_per_cycle" {
+  type        = string
   default     = "5"
   description = "The maximum number of images to delete in a single automated image cleanup cycle. If set to less than 1, the value is ignored."
 }
 
 variable "ecs_image_pull_behavior" {
+  type        = string
   default     = "default"
   description = "The behavior used to customize the pull image process for your container instances."
 }
 
 variable "ecs_datadir" {
+  type        = string
   default     = "/data"
   description = "The name of the persistent data directory on the container that is running the Amazon ECS container agent. The directory is used to save information about the cluster and the agent state."
 }
 
 variable "ecs_checkpoint" {
+  type        = string
   default     = "true"
   description = "Whether to save the checkpoint state to the location specified with `ECS_DATADIR`."
 }
 
 variable "ecs_engine_auth_type" {
+  type        = string
   default     = ""
   description = "The type of auth data that is stored in the ECS_ENGINE_AUTH_DATA key."
   validation {
@@ -273,26 +299,31 @@ variable "ecs_engine_auth_type" {
 }
 
 variable "ecs_engine_auth_data" {
+  type        = string
   default     = ""
   description = "Docker [auth data](https://pkg.go.dev/github.com/aws/amazon-ecs-agent/agent/dockerclient/dockerauth) formatted as defined by `ECS_ENGINE_AUTH_TYPE`."
 }
 
 variable "ecs_container_stop_timeout" {
+  type        = string
   default     = "10m"
   description = "Instance scoped configuration for time to wait for the container to exit normally before being forcibly killed."
 }
 
 variable "ecs_enable_spot_instance_draining" {
+  type        = string
   default     = "false"
   description = "Whether to enable Spot Instance draining for the container instance. If true, if the container instance receives a spot interruption notice, agent will set the instance's status to DRAINING, which gracefully shuts down and replaces all tasks running on the instance that are part of a service."
 }
 
 variable "ecs_engine_task_cleanup_wait_duration" {
+  type        = string
   default     = "3h"
   description = "Default time to wait to delete containers for a stopped task. If set to less than 1 second, the value is ignored."
 }
 
 variable "non_ecs_image_minimum_cleanup_age" {
+  type        = string
   default     = "1h"
   description = "The minimum time interval between when a non ECS image is created and when it can be considered for automated image cleanup."
 }
