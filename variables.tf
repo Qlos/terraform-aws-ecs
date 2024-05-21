@@ -335,7 +335,7 @@ variable "tags" {
 }
 
 variable "ecs_services" {
-  type        = map(any)
+  type        = any # some of elements are optional and have default values - any will be convenient here
   default     = {}
   description = "Configuration of ECS services running on the cluster"
 }
