@@ -4,12 +4,18 @@ variable "name" {
 
 variable "capacity_provider_strategy" {
   type = list(object({
-    capacity_provider = string
-    weight            = number
-    base              = number
+    capacity_provider_key = string # key name in capacity_providers_names map will be resolved to real name (generated) inside the module
+    weight                = number
+    base                  = number
   }))
   description = "The capacity provider strategies to use for the service. See `capacity_provider_strategy` configuration block: https://www.terraform.io/docs/providers/aws/r/ecs_service.html#capacity_provider_strategy"
   default     = []
+}
+
+variable "capacity_providers_names" {
+  type        = map(string)
+  default     = {}
+  description = "Configuration of Capacity Providers for ECS cluster autoscaling passed from main module to resolve generated names"
 }
 
 variable "cluster_id" {

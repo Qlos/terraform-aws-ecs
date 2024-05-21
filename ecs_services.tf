@@ -4,6 +4,7 @@ module "ecs_services" {
 
   name                               = each.value.name
   capacity_provider_strategy         = try(each.value.capacity_provider_strategy, [])
+  capacity_providers_names           = local.capacity_providers_names
   cluster_id                         = aws_ecs_cluster.this.id
   deployment_maximum_percent         = try(each.value.deployment_maximum_percent, null)
   deployment_minimum_healthy_percent = try(each.value.deployment_minimum_healthy_percent, null)
