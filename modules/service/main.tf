@@ -62,7 +62,7 @@ resource "aws_ecs_service" "this" {
     for_each = var.capacity_provider_strategy
     content {
       base              = try(capacity_provider_strategy.value.base, null)
-      capacity_provider = capacity_provider_strategy.value.capacity_provider
+      capacity_provider = var.capacity_providers_names[capacity_provider_strategy.value.capacity_provider_key]
       weight            = try(capacity_provider_strategy.value.weight, null)
     }
   }
