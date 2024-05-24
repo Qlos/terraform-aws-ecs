@@ -3,9 +3,11 @@ module "ecs_services" {
   for_each = var.ecs_services
 
   name                               = each.value.name
+  autoscaling_configuration          = try(each.value.autoscaling_configuration, {})
   capacity_provider_strategy         = try(each.value.capacity_provider_strategy, [])
   capacity_providers_names           = local.capacity_providers_names
   cluster_id                         = aws_ecs_cluster.this.id
+  cluster_name                       = aws_ecs_cluster.this.name
   deployment_maximum_percent         = try(each.value.deployment_maximum_percent, null)
   deployment_minimum_healthy_percent = try(each.value.deployment_minimum_healthy_percent, null)
   desired_count                      = try(each.value.desired_count, 1)

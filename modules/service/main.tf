@@ -107,4 +107,66 @@ resource "aws_ecs_service" "this" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [ desired_count ]
+  }
+}
+
+resource "aws_appautoscaling_target" "this" {
+  count = length(var.autoscaling_configuration) > 0 ? 1 : 0
+  min_capacity = var.autoscaling_configuration.min_capacity
+  max_capacity = var.autoscaling_configuration.max_capacity
+  resource_id = "service/${var.cluster_name}/${aws_ecs_service.this.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace = "ecs"
+}
+
+resource "aws_appautoscaling_policy" "this" {
+  for_each = try(var.autoscaling_configuration.policies, {})
+
+  name = each.value.name
+  policy_type = each.value.policy_type
+
+  resource_id = aws_appautoscaling_target.this[0].resource_id
+  scalable_dimension = aws_appautoscaling_target.this[0].scalable_dimension
+  service_namespace = aws_appautoscaling_target.this[0].service_namespace
+
+  dynamic "step_scaling_policy_configuration" {
+    for_each = try([each.value.step_scaling_policy_configuration], [])
+    content {
+      adjustment_type = step_scaling_policy_configuration.adjustment_type
+      cooldown = step_scaling_policy_configuration.cooldown
+      metric_aggregation_type = try(step_scaling_policy_configuration.metric_aggregation_type, null)
+      min_adjustment_magnitude = try(step_scaling_policy_configuration.min_adjustment_magnitude, null)
+
+      dynamic "step_adjustment" {
+        for_each = try(step_scaling_policy_configuration.step_adjustments, [])
+        content {
+          metric_interval_lower_bound = try(step_adjustment.metric_interval_lower_bound, null)
+          metric_interval_upper_bound = try(step_adjustment.metric_interval_upper_bound, null)
+          scaling_adjustment = step_adjustment.scaling_adjustment
+        }
+      }
+    }
+  }
+
+  dynamic "target_tracking_scaling_policy_configuration" {
+    for_each = try([each.value.target_tracking_scaling_policy_configuration], [])
+    content {
+      target_value = each.value.target_tracking_scaling_policy_configuration.target_value
+      disable_scale_in = try(each.value.target_tracking_scaling_policy_configuration.disable_scale_in, false)
+      scale_in_cooldown = try(each.value.target_tracking_scaling_policy_configuration.scale_in_cooldown, null)
+      scale_out_cooldown = try(each.value.target_tracking_scaling_policy_configuration.scale_out_cooldown, null)
+
+      # custom_metric_specification not supported yet
+      dynamic "predefined_metric_specification" {
+        for_each = try([each.value.target_tracking_scaling_policy_configuration.predefined_metric_specification], [])
+        content {
+          predefined_metric_type = each.value.target_tracking_scaling_policy_configuration.predefined_metric_specification.predefined_metric_type
+          resource_label = try(each.value.target_tracking_scaling_policy_configuration.predefined_metric_specification.resource_label, "${local.lb_arn_suffix}/${local.tg_arn_suffix}")
+        }
+      }
+    }
+  }
 }

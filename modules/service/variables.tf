@@ -22,6 +22,10 @@ variable "cluster_id" {
   type = string
 }
 
+variable "cluster_name" {
+  type = string
+}
+
 variable "deployment_maximum_percent" {
   type    = number
   default = null
@@ -152,4 +156,10 @@ variable "tags" {
 variable "service_discovery" {
   type    = any
   default = null
+}
+
+# autoscaling policies
+variable "autoscaling_configuration" {
+  type = any
+  default = {}
 }
