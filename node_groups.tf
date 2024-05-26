@@ -65,7 +65,7 @@ module "node_group" {
   wait_for_capacity_timeout = try(each.value.wait_for_capacity_timeout, var.node_group_defaults.wait_for_capacity_timeout, null)
   default_cooldown          = try(each.value.default_cooldown, var.node_group_defaults.default_cooldown, null)
   default_instance_warmup   = try(each.value.default_instance_warmup, var.node_group_defaults.default_instance_warmup, null)
-  protect_from_scale_in     = try(each.value.protect_from_scale_in != "DISABLED", var.node_group_defaults.protect_from_scale_in != "DISABLED", true)
+  protect_from_scale_in     = try(each.value.protect_from_scale_in, false)
   context                   = try(each.value.context, var.node_group_defaults.context, null)
 
   target_group_arns         = try(each.value.target_group_arns, var.node_group_defaults.target_group_arns, var.target_group_arns)
