@@ -163,3 +163,11 @@ variable "autoscaling_configuration" {
   type = any
   default = {}
 }
+
+variable "ordered_placement_strategy" {
+  type = list(object({
+    type  = string
+    field = string
+  }))
+  default = []
+}

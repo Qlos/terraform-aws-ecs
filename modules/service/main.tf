@@ -84,6 +84,14 @@ resource "aws_ecs_service" "this" {
     }
   }
 
+  dynamic "ordered_placement_strategy" {
+    for_each = var.ordered_placement_strategy
+    content {
+      type = ordered_placement_strategy.value.type
+      field = try(ordered_placement_strategy.value.field, null)
+    }
+  }
+
   # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_service#service_connect_configuration
   dynamic "service_connect_configuration" {
     for_each = length(try(var.service_discovery, {})) > 0 ? [var.service_discovery] : []
