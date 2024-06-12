@@ -167,10 +167,8 @@ resource "aws_ecs_capacity_provider" "this" {
 }
 
 resource "aws_ecs_cluster_capacity_providers" "this" {
-  for_each           = var.capacity_providers
   cluster_name       = aws_ecs_cluster.this.name
-  capacity_providers = [local.capacity_providers_names[each.key]]
-  depends_on         = [aws_ecs_capacity_provider.this]
+  capacity_providers = [ for k, v in aws_ecs_capacity_provider.this : v.name ]
 }
 
 resource "aws_cloudwatch_log_group" "cluster" {
