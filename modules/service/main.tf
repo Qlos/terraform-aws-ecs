@@ -94,7 +94,7 @@ resource "aws_ecs_service" "this" {
 
   # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ecs_service#service_connect_configuration
   dynamic "service_connect_configuration" {
-    for_each = length(try(var.service_discovery, {})) > 0 ? [var.service_discovery] : []
+    for_each = try(length(var.service_discovery), 0) > 0 ? [var.service_discovery] : []
     content {
       enabled   = true
       namespace = service_connect_configuration.value.namespace

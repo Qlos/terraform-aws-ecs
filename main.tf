@@ -154,7 +154,7 @@ resource "aws_ecs_capacity_provider" "this" {
   name     = local.capacity_providers_names[each.key]
   auto_scaling_group_provider {
     auto_scaling_group_arn         = local.node_groups_autoscaling_group_arns[each.value.node_group_index]
-    managed_termination_protection = try(each.value.auto_scaling_group_provider.managed_termination_protection, "ENABLED")
+    managed_termination_protection = try(each.value.auto_scaling_group_provider.managed_termination_protection, "DISABLED")
     managed_draining               = try(each.value.auto_scaling_group_provider.managed_draining, "ENABLED")
     managed_scaling {
       instance_warmup_period    = try(each.value.auto_scaling_group_provider.managed_scaling.instance_warmup_period, 0) # no warmup
