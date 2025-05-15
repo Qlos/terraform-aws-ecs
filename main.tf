@@ -41,36 +41,6 @@ data "aws_ami" "latest_ecs_ami" {
   owners = ["amazon"]
 }
 
-data "template_file" "user_data" {
-  template = file("${path.module}/templates/user_data.sh")
-
-  vars = {
-    ecs_config                            = var.ecs_config
-    ecs_reserved_ports                    = var.ecs_reserved_ports
-    ecs_reserved_udp_ports                = var.ecs_reserved_udp_ports
-    ecs_logging                           = var.ecs_logging
-    ecs_log_level                         = var.ecs_log_level
-    ecs_log_file                          = var.ecs_log_file
-    cluster_name                          = var.name
-    custom_userdata                       = var.custom_userdata
-    cloudwatch_prefix                     = local.cloudwatch_cluster_name
-    ecs_disable_image_cleanup             = var.ecs_disable_image_cleanup
-    ecs_image_cleanup_interval            = var.ecs_image_cleanup_interval
-    ecs_image_minimum_cleanup_age         = var.ecs_image_minimum_cleanup_age
-    non_ecs_image_minimum_cleanup_age     = var.non_ecs_image_minimum_cleanup_age
-    ecs_num_images_delete_per_cycle       = var.ecs_num_images_delete_per_cycle
-    ecs_engine_task_cleanup_wait_duration = var.ecs_engine_task_cleanup_wait_duration
-    ecs_container_stop_timeout            = var.ecs_container_stop_timeout
-    ecs_enable_spot_instance_draining     = var.ecs_enable_spot_instance_draining
-    ecs_image_pull_behavior               = var.ecs_image_pull_behavior
-    ecs_datadir                           = var.ecs_datadir
-    ecs_checkpoint                        = var.ecs_checkpoint
-    ecs_engine_auth_type                  = var.ecs_engine_auth_type
-    ecs_engine_auth_data                  = var.ecs_engine_auth_data
-    health_check_port                     = var.tg_health_check_port
-  }
-}
-
 resource "aws_ecs_cluster" "this" {
 
   name = var.name
