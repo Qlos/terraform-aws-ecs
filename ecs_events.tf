@@ -1,6 +1,3 @@
-locals {
-  
-}
 resource "aws_sns_topic" "ecs_events" {
   name = "ecs_events_${var.name}"
 }
