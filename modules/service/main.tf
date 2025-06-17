@@ -24,21 +24,22 @@ resource "aws_ecs_task_definition" "this" {
       host_path = try(volume.value.host_path, null)
 
       dynamic "efs_volume_configuration" {
-        for_each = try(volume.value.efs_volume_configuration, {})
-        content {
-          file_system_id          = efs_volume_configuration.value.file_system_id
-          root_directory          = try(efs_volume_configuration.value.root_directory, "/")
-          transit_encryption      = try(efs_volume_configuration.value.transit_encryption, "DISABLED")
-          transit_encryption_port = try(efs_volume_configuration.value.transit_encryption_port, null)
-          dynamic "authorization_config" {
-            for_each = try(efs_volume_configuration.value.authorization_config, {})
-            content {
-              access_point_id = try(authorization_config.value.access_point_id, null)
-              iam             = try(authorization_config.value.iam, "DISABLED")
+          for_each = volume.value.efs_volume_configuration != null ? [volume.value.efs_volume_configuration] : []
+          content {
+            file_system_id     = efs_volume_configuration.value.file_system_id
+            root_directory     = try(efs_volume_configuration.value.root_directory, "/")
+            transit_encryption = try(efs_volume_configuration.value.transit_encryption, "DISABLED")
+            transit_encryption_port = try(efs_volume_configuration.value.transit_encryption_port, null)
+
+            dynamic "authorization_config" {
+              for_each = try(efs_volume_configuration.value.authorization_config != null ? [efs_volume_configuration.value.authorization_config] : [], [])
+              content {
+                access_point_id = try(authorization_config.value.access_point_id, null)
+                iam             = try(authorization_config.value.iam, "DISABLED")
+              }
             }
           }
         }
-      }
     }
   }
 }
@@ -89,6 +90,14 @@ resource "aws_ecs_service" "this" {
     content {
       type = ordered_placement_strategy.value.type
       field = try(ordered_placement_strategy.value.field, null)
+    }
+  }
+
+  dynamic "placement_constraints" {
+    for_each = var.placement_constraints
+    content {
+      type       = placement_constraints.value.type
+      expression = try(placement_constraints.value.expression, null)
     }
   }
 

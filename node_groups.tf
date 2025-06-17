@@ -37,6 +37,9 @@ Content-Transfer-Encoding: 7bit
 Content-Disposition: attachment; filename="userdata.txt"
 
 #!/bin/bash
+
+dnf install -y jq aws-cli amazon-cloudwatch-agent
+
 ${var.ecs_config}
 {
   echo "ECS_CLUSTER=${var.name}"
@@ -60,45 +63,45 @@ ${var.ecs_config}
   echo "ECS_AVAILABLE_LOGGING_DRIVERS=${var.ecs_logging}"
 } >> /etc/ecs/ecs.config
 
-cat > /etc/awslogs/awslogs.conf <<- EOF
-[general]
-state_file = /var/lib/awslogs/agent-state
+# Save dmesg logs to file
+dmesg > /var/log/dmesg
 
-[/var/log/dmesg]
-file = /var/log/dmesg
-log_group_name = /aws/ecs/${var.name}/var/log/dmesg
-log_stream_name = ${var.name}/{region}/{container_instance_id}
-
-[/var/log/messages]
-file = /var/log/messages
-log_group_name = /aws/ecs/${var.name}/var/log/messages
-log_stream_name = ${var.name}/{region}/{container_instance_id}
-datetime_format = %b %d %H:%M:%S
-
-[/var/log/docker]
-file = /var/log/docker
-log_group_name = /aws/ecs/${var.name}/var/log/docker
-log_stream_name = ${var.name}/{region}/{container_instance_id}
-datetime_format = %Y-%m-%dT%H:%M:%S.%f
-
-[/var/log/ecs/ecs-init.log]
-file = /var/log/ecs/ecs-init.log.*
-log_group_name = /aws/ecs/${var.name}/var/log/ecs/ecs-init.log
-log_stream_name = ${var.name}/{region}/{container_instance_id}
-datetime_format = %Y-%m-%dT%H:%M:%SZ
-
-[/var/log/ecs/ecs-agent.log]
-file = /var/log/ecs/ecs-agent.log.*
-log_group_name = /aws/ecs/${var.name}/var/log/ecs/ecs-agent.log
-log_stream_name = ${var.name}/{region}/{container_instance_id}
-datetime_format = %Y-%m-%dT%H:%M:%SZ
-
-[/var/log/ecs/audit.log]
-file = /var/log/ecs/audit.log.*
-log_group_name = /aws/ecs/${var.name}/var/log/ecs/audit.log
-log_stream_name = ${var.name}/{region}/{container_instance_id}
-datetime_format = %Y-%m-%dT%H:%M:%SZ
-
+# Inject the Cloudwatch logs to ECS agent
+mkdir -p /opt/aws/amazon-cloudwatch-agent/etc
+cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json << EOF
+{
+  "logs": {
+    "logs_collected": {
+      "files": {
+        "collect_list": [
+          {
+            "file_path": "/var/log/dmesg",
+            "log_group_name": "/aws/ecs/${var.name}/var/log/dmesg",
+            "log_stream_name": "${var.name}/{region}/{container_instance_id}"
+          },
+          {
+            "file_path": "/var/log/ecs/ecs-agent.log",
+            "log_group_name": "/aws/ecs/${var.name}/var/log/ecs/ecs-agent.log",
+            "log_stream_name": "${var.name}/{region}/{container_instance_id}",
+            "timestamp_format": "%Y-%m-%dT%H:%M:%SZ"
+          },
+          {
+            "file_path": "/var/log/ecs/audit.log",
+            "log_group_name": "/aws/ecs/${var.name}/var/log/ecs/audit.log",
+            "log_stream_name": "${var.name}/{region}/{container_instance_id}",
+            "timestamp_format": "%Y-%m-%dT%H:%M:%SZ"
+          },
+          {
+            "file_path": "/var/log/ecs/ecs-init.log",
+            "log_group_name": "/aws/ecs/${var.name}/var/log/ecs/ecs-init.log",
+            "log_stream_name": "${var.name}/{region}/{container_instance_id}",
+            "timestamp_format": "%Y-%m-%dT%H:%M:%SZ"
+          }
+        ]
+      }
+    }
+  }
+}
 EOF
 
 #Check IMDSv1 or IMDSv2 is being used on the instance
@@ -115,13 +118,7 @@ else
 fi
 
 # Replace "{region}" with Available Zone of container instance
-sed -i -e "s/{region}/$region/g" /etc/awslogs/awslogs.conf
-
-# transform AZ to region
-region=$(echo $region | sed s'/.$//')
-# Replace the default log region with the region where the container instance is located.
-# https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/QuickStartEC2Instance.html#running-ec2-step-2
-sed -i -e -E "s/region = (.*)/region = $region/g" /etc/awslogs/awscli.conf
+sed -i -e "s/{region}/$region/g" /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
 
 # Set the ip address of the node
 # Get the ipv4 of the container instance
@@ -134,9 +131,9 @@ else
 fi
 
 # Replace "{container_instance_id}" with ipv4 of container instance
-sed -i -e "s/{container_instance_id}/$container_instance_id/g" /etc/awslogs/awslogs.conf
+sed -i -e "s/{container_instance_id}/$container_instance_id/g" /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
 
-systemctl enable --now awslogsd
+systemctl enable --now amazon-cloudwatch-agent
 
 # dummy health check
 # health check will not run if  port is not defined (default is empty).

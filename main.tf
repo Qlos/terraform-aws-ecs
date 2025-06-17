@@ -159,15 +159,6 @@ resource "aws_cloudwatch_log_group" "dmesg" {
   tags = merge(var.tags, var.cloudwatch_log_group_tags)
 }
 
-resource "aws_cloudwatch_log_group" "docker" {
-  count = var.create_cloudwatch_log_group ? 1 : 0
-
-  name              = "${local.cloudwatch_cluster_name}/var/log/docker"
-  retention_in_days = var.cloudwatch_log_group_retention_in_days
-
-  tags = merge(var.tags, var.cloudwatch_log_group_tags)
-}
-
 resource "aws_cloudwatch_log_group" "ecs-agent" {
   count = var.create_cloudwatch_log_group ? 1 : 0
 
@@ -190,15 +181,6 @@ resource "aws_cloudwatch_log_group" "audit" {
   count = var.create_cloudwatch_log_group ? 1 : 0
 
   name              = "${local.cloudwatch_cluster_name}/var/log/ecs/audit.log"
-  retention_in_days = var.cloudwatch_log_group_retention_in_days
-
-  tags = merge(var.tags, var.cloudwatch_log_group_tags)
-}
-
-resource "aws_cloudwatch_log_group" "messages" {
-  count = var.create_cloudwatch_log_group ? 1 : 0
-
-  name              = "${local.cloudwatch_cluster_name}/var/log/messages"
   retention_in_days = var.cloudwatch_log_group_retention_in_days
 
   tags = merge(var.tags, var.cloudwatch_log_group_tags)
