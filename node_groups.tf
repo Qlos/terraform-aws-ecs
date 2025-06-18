@@ -36,7 +36,115 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Content-Disposition: attachment; filename="userdata.txt"
 
-${data.template_file.user_data.rendered}
+#!/bin/bash
+
+dnf install -y jq aws-cli amazon-cloudwatch-agent
+
+${var.ecs_config}
+{
+  echo "ECS_CLUSTER=${var.name}"
+  echo "ECS_LOGFILE=${var.ecs_log_file}"
+  echo "ECS_LOGLEVEL=${var.ecs_log_level}"
+  echo "ECS_RESERVED_PORTS=${var.ecs_reserved_ports}"
+  echo "ECS_RESERVED_PORTS_UDP=${var.ecs_reserved_udp_ports}"
+  echo "ECS_DISABLE_IMAGE_CLEANUP=${var.ecs_disable_image_cleanup}"
+  echo "ECS_IMAGE_CLEANUP_INTERVAL=${var.ecs_image_cleanup_interval}"
+  echo "ECS_IMAGE_MINIMUM_CLEANUP_AGE=${var.ecs_image_minimum_cleanup_age}"
+  echo "NON_ECS_IMAGE_MINIMUM_CLEANUP_AGE=${var.non_ecs_image_minimum_cleanup_age}"
+  echo "ECS_NUM_IMAGES_DELETE_PER_CYCLE=${var.ecs_num_images_delete_per_cycle}"
+  echo "ECS_ENGINE_TASK_CLEANUP_WAIT_DURATION=${var.ecs_engine_task_cleanup_wait_duration}"
+  echo "ECS_CONTAINER_STOP_TIMEOUT=${var.ecs_container_stop_timeout}"
+  echo "ECS_ENABLE_SPOT_INSTANCE_DRAINING=${var.ecs_enable_spot_instance_draining}"
+  echo "ECS_IMAGE_PULL_BEHAVIOR=${var.ecs_image_pull_behavior}"
+  echo "ECS_DATADIR=${var.ecs_datadir}"
+  echo "ECS_CHECKPOINT=${var.ecs_checkpoint}"
+  echo "ECS_ENGINE_AUTH_TYPE=${var.ecs_engine_auth_type}"
+  echo "ECS_ENGINE_AUTH_DATA=${var.ecs_engine_auth_data}"
+  echo "ECS_AVAILABLE_LOGGING_DRIVERS=${var.ecs_logging}"
+} >> /etc/ecs/ecs.config
+
+# Save dmesg logs to file
+dmesg > /var/log/dmesg
+
+# Inject the Cloudwatch logs to ECS agent
+mkdir -p /opt/aws/amazon-cloudwatch-agent/etc
+cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json << EOF
+{
+  "logs": {
+    "logs_collected": {
+      "files": {
+        "collect_list": [
+          {
+            "file_path": "/var/log/dmesg",
+            "log_group_name": "/aws/ecs/${var.name}/var/log/dmesg",
+            "log_stream_name": "${var.name}/{region}/{container_instance_id}"
+          },
+          {
+            "file_path": "/var/log/ecs/ecs-agent.log",
+            "log_group_name": "/aws/ecs/${var.name}/var/log/ecs/ecs-agent.log",
+            "log_stream_name": "${var.name}/{region}/{container_instance_id}",
+            "timestamp_format": "%Y-%m-%dT%H:%M:%SZ"
+          },
+          {
+            "file_path": "/var/log/ecs/audit.log",
+            "log_group_name": "/aws/ecs/${var.name}/var/log/ecs/audit.log",
+            "log_stream_name": "${var.name}/{region}/{container_instance_id}",
+            "timestamp_format": "%Y-%m-%dT%H:%M:%SZ"
+          },
+          {
+            "file_path": "/var/log/ecs/ecs-init.log",
+            "log_group_name": "/aws/ecs/${var.name}/var/log/ecs/ecs-init.log",
+            "log_stream_name": "${var.name}/{region}/{container_instance_id}",
+            "timestamp_format": "%Y-%m-%dT%H:%M:%SZ"
+          }
+        ]
+      }
+    }
+  }
+}
+EOF
+
+#Check IMDSv1 or IMDSv2 is being used on the instance
+status_code=$(curl -s -o /dev/null -w "%%{http_code}" http://169.254.169.254/latest/meta-data/)
+
+# Set the region to send CloudWatch Logs data to (the region where the container instance is located)
+# Get availability zone where the container instance is located and remove the trailing character to give us the region.
+# https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html
+if [[ "$status_code" -eq 200 ]]
+then
+  region=$(curl http://169.254.169.254/latest/meta-data/placement/availability-zone)
+else
+  region=$(TOKEN=`curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"` && curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/placement/availability-zone)
+fi
+
+# Replace "{region}" with Available Zone of container instance
+sed -i -e "s/{region}/$region/g" /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+
+# Set the ip address of the node
+# Get the ipv4 of the container instance
+# https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html
+if [[ "$status_code" -eq 200 ]]
+then
+  container_instance_id=$(curl http://169.254.169.254/latest/meta-data/local-ipv4 | sed s'/.$//')
+else
+  container_instance_id=$(TOKEN=`curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"` && curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/local-ipv4 | sed s'/.$//')
+fi
+
+# Replace "{container_instance_id}" with ipv4 of container instance
+sed -i -e "s/{container_instance_id}/$container_instance_id/g" /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+
+systemctl enable --now amazon-cloudwatch-agent
+
+# dummy health check
+# health check will not run if  port is not defined (default is empty).
+# without a port, this container will return error  in the syntax of the `docker run` command  and that is ok.
+docker run -p ${var.tg_health_check_port}:${var.tg_health_check_port} -d --restart unless-stopped docker.io/hashicorp/http-echo -listen=:${ var.tg_health_check_port != null ? var.tg_health_check_port : "8080" } -text="health check" 2> /dev/null
+
+# Custom userdata script code
+${var.custom_userdata}
+
+echo "Done"
+
 --//--
 EOT
 

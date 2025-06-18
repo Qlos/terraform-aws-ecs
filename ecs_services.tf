@@ -17,6 +17,7 @@ module "ecs_services" {
   wait_for_steady_state              = try(each.value.wait_for_steady_state, false)
   load_balancer                      = try(each.value.load_balancer, [])
   ordered_placement_strategy         = try(each.value.ordered_placement_strategy, [])
+  placement_constraints              = try(each.value.placement_constraints, [])
   propagate_tags                     = try(each.value.propagate_tags, "TASK_DEFINITION")
   scheduling_strategy                = try(each.value.scheduling_strategy, "REPLICA")
   service_subnet_ids                 = try(each.value.service_subnet_ids, [])
