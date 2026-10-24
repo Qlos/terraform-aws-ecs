@@ -345,3 +345,9 @@ variable "service_discovery_namespaces" {
   default     = {}
   description = "Map of ECS service discovery namespaces."
 }
+
+variable "ecs_instance_additional_policy_arns" {
+  description = "Additional managed IAM policies attached to the ECS EC2 instance role."
+  type        = set(string)
+  default     = []
+}

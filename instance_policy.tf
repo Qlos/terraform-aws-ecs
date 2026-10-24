@@ -44,3 +44,10 @@ resource "aws_iam_role_policy_attachment" "ecs_ec2_ssm_role" {
   role       = aws_iam_role.ecs_instance_role.id
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedEC2InstanceDefaultPolicy"
 }
+
+resource "aws_iam_role_policy_attachment" "ecs_instance_additional" {
+  for_each = var.ecs_instance_additional_policy_arns
+
+  role       = aws_iam_role.ecs_instance_role.name
+  policy_arn = each.value
+}
